@@ -361,9 +361,47 @@ function setLoading(t){
  else c.textContent='--';
 }
 function ropts(n,a,d){return a.map(function(v,i){return '<label class=ro><input type=radio name='+n+' value="'+v+'"'+(i===d?' checked':'')+'><span>'+v+'</span></label>'}).join('')}
-var FS={};
+var FH_API='https://script.google.com/macros/s/AKfycbxmUkSdjtjGCsYgGC5uejgWbD4_ILIcOJZH0KEotFpewY96LBH22qaEudM2tMy16AN3_w/exec';
+var FS={},PEND={},fhTimer=0,fhBusy=false;
 try{FS=JSON.parse(localStorage.getItem('fhs')||'{}')||{}}catch(e){FS={}}
-function fsSave(){try{localStorage.setItem('fhs',JSON.stringify(FS))}catch(e){}}
+try{PEND=JSON.parse(localStorage.getItem('fhp')||'{}')||{}}catch(e){PEND={}}
+function fsSave(){try{localStorage.setItem('fhs',JSON.stringify(FS));localStorage.setItem('fhp',JSON.stringify(PEND))}catch(e){}}
+function fhStatus(t,err){var e=document.getElementById('fhs');if(!e)return;e.textContent=t;e.className='umsg'+(err?' err':'')}
+function fhApiOn(){return /^https:\/\//.test(FH_API)}
+function fhFlush(){
+ if(!fhApiOn()||fhBusy)return;
+ var ks=Object.keys(PEND);if(!ks.length){fhStatus('SAVED TO GOOGLE SHEET');return}
+ fhBusy=true;fhStatus('SAVING...');
+ var snap=ks.map(function(k){return {key:k,values:PEND[k]}});
+ fetch(FH_API,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:'save',items:snap})})
+ .then(function(r){return r.json()}).then(function(j){
+  if(!j||!j.ok)throw new Error('save failed');
+  snap.forEach(function(x){if(JSON.stringify(PEND[x.key])===JSON.stringify(x.values))delete PEND[x.key]});
+  fsSave();fhBusy=false;
+  if(Object.keys(PEND).length)fhFlush();else fhStatus('SAVED TO GOOGLE SHEET');
+ }).catch(function(e){fhBusy=false;fhStatus('NOT SAVED - WILL RETRY ['+String(e&&e.message||e).slice(0,60)+']',true)});
+}
+function fhQueue(key,vals){PEND[key]=vals;fsSave();fhStatus('SAVING...');clearTimeout(fhTimer);fhTimer=setTimeout(fhFlush,700)}
+function fhSeed(d){
+ var ks=['O|INWARD','O|OUTWARD','K|INWARD','K|OUTWARD','K|BOTH'];
+ ['INWARD','OUTWARD'].forEach(function(m){['BCN','BCNHL'].forEach(function(c){['R','M','P'].forEach(function(r){ks.push('C|'+m+'|'+c+'|'+r)})})});
+ ks.forEach(function(k){if(!d[k]&&!PEND[k])PEND[k]=fsGet(k)});
+ fsSave();
+}
+function fhPull(){
+ if(!fhApiOn()){fhStatus('GOOGLE SHEET NOT CONNECTED',true);return}
+ fhStatus('LOADING...');
+ fetch(FH_API+'?action=get&t='+Date.now()).then(function(r){return r.json()}).then(function(j){
+  if(!j||!j.ok)throw new Error('load failed');
+  var d=j.data||{};Object.keys(d).forEach(function(k){if(!PEND[k])FS[k]=d[k]});
+  fhSeed(d);
+  var f=document.getElementById('fhb');
+  if(f&&!f.contains(document.activeElement)){f.dataset.c='';fhUpd()}
+  updFH();
+  if(Object.keys(PEND).length)fhFlush();else fhStatus('SYNCED WITH GOOGLE SHEET');
+ }).catch(function(e){fhStatus('OFFLINE - SHOWING SAVED VALUES ['+String(e&&e.message||e).slice(0,60)+']',true)});
+}
+window.addEventListener('online',function(){fhFlush()});
 function fsDef(key){var a=key.split('|');
  if(a[0]==='C')return a[3]==='M'?[5]:(a[2]==='BCN'?[5,7,9]:[5,7,9,11]);
  if(a[0]==='O')return a[1]==='INWARD'?[7,9]:[5,9];
@@ -372,7 +410,7 @@ function fsGet(key){var d=fsDef(key),s=FS[key];return d.map(function(x,i){return
 function fhTable(f,key,title,labels,head){
  var v=fsGet(key);f.dataset.c=key;
  f.innerHTML='<div class=stl>'+title+'</div><table class="fht'+(labels?'':' one')+'"><tr>'+(labels?'<th>'+head+'</th>':'')+'<th>FREE HOURS</th></tr>'+v.map(function(x,i){return '<tr>'+(labels?'<td>'+labels[i]+'</td>':'')+'<td><input class=gin type=text inputmode=numeric maxlength=3 value='+x+'></td></tr>'}).join('')+'</table>';
- f.querySelectorAll('input').forEach(function(i){i.oninput=function(){this.value=this.value.replace(/[^0-9]/g,'');FS[key]=[].map.call(f.querySelectorAll('input'),function(x){return x.value===''?null:+x.value});fsSave()}});
+ f.querySelectorAll('input').forEach(function(i){i.oninput=function(){this.value=this.value.replace(/[^0-9]/g,'');FS[key]=[].map.call(f.querySelectorAll('input'),function(x){return x.value===''?null:+x.value});fsSave();fhQueue(key,FS[key])}});
 }
 function calcFH(){
  var R=window.RS;if(!R)return '--';
@@ -423,8 +461,8 @@ function fhUpd(){
 function showFreeHours(){
  var gl=document.getElementById('glist');
  gl.classList.remove('wide');document.querySelector('main').classList.remove('top');
- gl.innerHTML='<h3>FREE HOURS</h3><div class=gpanel><div class="rg r3">'+ropts('mv',['INWARD','OUTWARD','BOTH'],0)+'</div><div class=stl>TYPE OF WAGON</div><div class=rg>'+ropts('wt',['OPEN WAGON','COVER WAGON','TANK WAGON','CONTAINER'],-1)+'</div><div id=wcw class=wcw></div><div id=rkt class=wcw></div><div id=fhb class=wcw></div></div>';
- gl.hidden=false;document.querySelector('.card').hidden=true;gl.onchange=fhUpd;fhUpd();
+ gl.innerHTML='<h3>FREE HOURS</h3><div class=gpanel><div class="rg r3">'+ropts('mv',['INWARD','OUTWARD','BOTH'],0)+'</div><div class=stl>TYPE OF WAGON</div><div class=rg>'+ropts('wt',['OPEN WAGON','COVER WAGON','TANK WAGON','CONTAINER'],-1)+'</div><div id=wcw class=wcw></div><div id=rkt class=wcw></div><div id=fhb class=wcw></div><div id=fhs class=umsg></div></div>';
+ gl.hidden=false;document.querySelector('.card').hidden=true;gl.onchange=fhUpd;fhUpd();fhPull();
 }
 function toast(){var t=document.getElementById("toast");t.classList.add("on");clearTimeout(toast.t);toast.t=setTimeout(function(){t.classList.remove("on")},1500)}
 function show(k){
@@ -465,6 +503,7 @@ btn.onclick=function(){
  paint();
 };
 paint();
+fhPull();
 document.getElementById("date").textContent=fmtDate(new Date());
 // Splash 3 sec
 setTimeout(function(){
