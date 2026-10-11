@@ -194,6 +194,17 @@ nav button.on{color:var(--ct)}
 
 .date{display:flex;flex-direction:column;align-items:center;line-height:1.25;border-radius:14px}
 .date .d2{font-size:.72em;letter-spacing:.14em;font-weight:700;color:#fff;opacity:.85}
+
+#dup{position:fixed;inset:0;z-index:20;display:flex;align-items:center;justify-content:center;padding:24px;background:rgba(3,12,35,.58);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)}
+#dup[hidden]{display:none}
+#dup .dc{width:100%;max-width:340px;text-align:center;background:var(--surface);color:var(--text);border:1px solid var(--line);border-top:4px solid var(--cyan);border-radius:20px;padding:26px 20px 20px;box-shadow:0 18px 50px rgba(0,20,70,.45);display:flex;flex-direction:column;align-items:center;gap:10px;animation:dpop .18s ease-out}
+#dup .di{width:56px;height:56px;border-radius:50%;display:grid;place-items:center;color:#fff;background:linear-gradient(135deg,#00C2E8,#0A6FD8);box-shadow:0 6px 16px rgba(0,150,210,.4)}
+#dup .di svg{width:28px;height:28px}
+#dup h3{margin:4px 0 0;font-size:18px;letter-spacing:.14em;color:var(--text)}
+#dup p{margin:0;font-size:13px;font-weight:700;letter-spacing:.1em;color:var(--muted)}
+#dup .dk{max-width:100%;word-break:break-all;font-size:12px;font-weight:700;letter-spacing:.06em;color:var(--ct);background:rgba(0,190,230,.12);border:1px solid var(--line);border-radius:10px;padding:8px 12px}
+#dup .gbtn{width:100%;margin-top:6px;justify-content:center;min-height:48px;font-weight:800;letter-spacing:.14em}
+@keyframes dpop{from{opacity:0;transform:scale(.92)}to{opacity:1;transform:none}}
 </style>
 </head>
 <body>
@@ -335,7 +346,7 @@ $('ssb').onclick=function(){
  fetch(RAKE_API,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:'saveRake',rakeId:rid,data:data})})
  .then(function(r){return r.json()}).then(function(j){
   if(!j||!j.ok)throw new Error('SRV:'+((j&&j.error)||'failed'));
-  msg(j.updated?'UPDATED IN GOOGLE SHEET':'SAVED TO GOOGLE SHEET');
+  if(j.duplicate){msg('DUPLICATE ENTRY - NOT SAVED',true);dupPopup(rid)}else msg('SAVED TO GOOGLE SHEET');
  }).catch(function(e){var m=String(e&&e.message||'');msg(m.indexOf('SRV:')===0?'NOT SAVED - '+m.slice(4).toUpperCase().slice(0,80):'NOT SAVED - CHECK INTERNET AND TRY AGAIN',true)}).then(function(){btn.disabled=false});
 };
  setLoading(tn||'');var wsel=$('wtype');window.RS={tn:tn||'',code:wty,rt:rt,wc:wc};updFH();if(wsel)wsel.onchange=function(){setLoading(wsel.value);updFH()};$('tlv').onchange=updFH;
@@ -552,6 +563,20 @@ btn.onclick=function(){
  try{localStorage.setItem("theme",n)}catch(e){}
  paint();
 };
+function dupPopup(id){
+ var o=document.getElementById('dup');
+ if(!o){
+  o=document.createElement('div');o.id='dup';o.hidden=true;
+  o.innerHTML='<div class="dc" role="alertdialog" aria-modal="true" aria-labelledby="dupT" aria-describedby="dupM"><div class="di"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l10 18H2z"/><path d="M12 10v5M12 18.2v.1"/></svg></div><h3 id="dupT">DUPLICATE ENTRY</h3><p id="dupM">DATA ALREADY EXISTS</p><div class="dk" id="dupK"></div><button type="button" class="gbtn pri" id="dupB">OK</button></div>';
+  document.body.appendChild(o);
+  var cl=function(){o.hidden=true};
+  document.getElementById('dupB').onclick=cl;
+  o.addEventListener('click',function(e){if(e.target===o)cl()});
+  document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!o.hidden)cl()});
+ }
+ document.getElementById('dupK').textContent=id;
+ o.hidden=false;document.getElementById('dupB').focus();
+}
 function fitHdr(){
  var b=document.getElementById('hb1'),s=document.getElementById('hb2'),g=document.getElementById('hb3');
  if(!b||!s||!g)return;
