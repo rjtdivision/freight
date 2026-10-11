@@ -319,9 +319,25 @@ function processWgn(st){
  var R=[['RAKE ID',rid],['RAKE TYPE',rt],['WAGON CODE',wty],['TYPE OF WAGON','',tcell],['STATION FROM',from],['STATION TO',st],['NO. OF WAGONS',wc],['INVOICE NO.',invD],['INVOICE DATE',idate],['ACTUAL WEIGHT (TONNE)',wt.toFixed(2)],['CONSIGNER',g(f[0],'CNSR')],['CONSIGNEE',g(f[0],'CNSG')],['COMMODITY CODE',g(f[0],'CMDT')]];
  var gl=document.getElementById('glist');
  gl.innerHTML='<h3>UPLOAD WGN NO.</h3><div class=gpanel><table class=sum>'+R.map(function(a){return '<tr><td>'+a[0]+'</td><td>'+(a[2]||esc(a[1]))+'</td></tr>'}).join('')
- +'<tr><td>WAGON SUMMARY</td><td><textarea id=wj class=gin>'+esc(wsum)+'</textarea></td></tr><tr><td>FREE HOURS</td><td id=fhv>--</td></tr><tr><td>TYPE OF LOADING</td><td id=tlv>--</td></tr></table><div class=urow><button type=button class="gbtn" id=sbk>BACK</button></div></div>';
+ +'<tr><td>WAGON SUMMARY</td><td><textarea id=wj class=gin>'+esc(wsum)+'</textarea></td></tr><tr><td>FREE HOURS</td><td id=fhv>--</td></tr><tr><td>TYPE OF LOADING</td><td id=tlv>--</td></tr></table><div id=rsm class=umsg></div><div class=urow><button type=button class="gbtn" id=sbk>BACK</button><button type=button class="gbtn pri" id=ssb>SUBMIT</button></div></div>';
  var $=function(x){return document.getElementById(x)};
  $('sbk').onclick=goBack;
+$('ssb').onclick=function(){
+ var btn=this,msg=function(t,e){var m=$('rsm');if(!m)return;m.textContent=t;m.className='umsg'+(e?' err':'')};
+ var ty=tn||(wsel?wsel.value:'');
+ if(!ty){msg('SELECT TYPE OF WAGON FIRST',true);return}
+ if(!/^https:\/\//.test(RAKE_API)){msg('INWARD_NO SHEET NOT CONNECTED',true);return}
+ var ws;try{ws=JSON.parse($('wj').value)}catch(e){ws=f.map(function(r){return {RLY:g(r,'WAGON RLY'),TYPE:g(r,'WAGON TYPE'),NO:g(r,'WAGON NO')}})}
+ var rd=document.querySelector('input[name=tl]:checked'),tl=rd?rd.value:$('tlv').textContent.trim();if(tl==='--')tl='';
+ var fv=calcFH(),d=new Date();
+ var data={RAKE_ID:rid,RAKE_TYPE:rt,WAGON_CODE:wty,TYPE_OF_WAGON:ty,STATION_FROM:from,STATION_TO:st,NO_OF_WAGONS:wc,INVOICE_NO:invD,INVOICE_DATE:idate,ACTUAL_WEIGHT_TONNE:+wt.toFixed(2),CONSIGNER:g(f[0],'CNSR'),CONSIGNEE:g(f[0],'CNSG'),COMMODITY_CODE:g(f[0],'CMDT'),WAGON_SUMMARY:ws,FREE_HOURS:typeof fv==='number'?fv:null,TYPE_OF_LOADING:tl,SUBMITTED_AT:p2(d.getDate())+'/'+p2(d.getMonth()+1)+'/'+d.getFullYear()+' '+p2(d.getHours())+':'+p2(d.getMinutes())+':'+p2(d.getSeconds())};
+ btn.disabled=true;msg('SAVING...');
+ fetch(RAKE_API,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:'saveRake',rakeId:rid,data:data})})
+ .then(function(r){return r.json()}).then(function(j){
+  if(!j||!j.ok)throw new Error('SRV:'+((j&&j.error)||'failed'));
+  msg(j.updated?'UPDATED IN GOOGLE SHEET':'SAVED TO GOOGLE SHEET');
+ }).catch(function(e){var m=String(e&&e.message||'');msg(m.indexOf('SRV:')===0?'NOT SAVED - '+m.slice(4).toUpperCase().slice(0,80):'NOT SAVED - CHECK INTERNET AND TRY AGAIN',true)}).then(function(){btn.disabled=false});
+};
  setLoading(tn||'');var wsel=$('wtype');window.RS={tn:tn||'',code:wty,rt:rt,wc:wc};updFH();if(wsel)wsel.onchange=function(){setLoading(wsel.value);updFH()};$('tlv').onchange=updFH;
  window.scrollTo(0,0);UW.station=st;if(!NP)hpush({t:'INWARD',s:'result'});updateBack();
 }
@@ -394,6 +410,7 @@ function setLoading(t){
 }
 function ropts(n,a,d){return a.map(function(v,i){return '<label class=ro><input type=radio name='+n+' value="'+v+'"'+(i===d?' checked':'')+'><span>'+v+'</span></label>'}).join('')}
 var FH_API='https://script.google.com/macros/s/AKfycbxmUkSdjtjGCsYgGC5uejgWbD4_ILIcOJZH0KEotFpewY96LBH22qaEudM2tMy16AN3_w/exec';
+var RAKE_API='https://script.google.com/macros/s/AKfycbyOmezCYttMZ7viPQI5vOOKlgz7SJ-wvXbolA1axbfQv7GNTIJdc9cGUvTWSRd62hsAkA/exec';
 var FH_EDIT=false;
 var FS={},PEND={},fhTimer=0,fhBusy=false;
 try{FS=JSON.parse(localStorage.getItem('fhs')||'{}')||{}}catch(e){FS={}}
