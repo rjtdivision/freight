@@ -235,6 +235,27 @@ select.gin:disabled{cursor:not-allowed}
 #tcf p{margin:0;font-size:11px;font-weight:700;letter-spacing:.1em;color:var(--muted)}
 #tcf .sum td{padding:8px 10px;font-size:12.5px;text-align:left}
 #tcf .sum td:first-child{font-size:10px}
+.lcol{display:flex;flex-direction:column;gap:8px}
+.lrow{display:flex;gap:8px}.lrow .gin{flex:1;min-width:0}
+.lbtn{width:50px;flex:none;border:1.5px solid var(--ct);border-radius:10px;background:transparent;color:var(--ct);font-family:inherit;font-size:26px;font-weight:800;line-height:1;cursor:pointer}
+.lbtn:active{transform:scale(.94)}
+.lbtn:disabled{opacity:.4;cursor:not-allowed}
+.lbtn:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+
+.glist.pl .gpanel{padding:8px 3px;gap:8px}
+main:has(.glist.pl:not([hidden])){padding:4px}
+.plt{table-layout:auto}
+.plt th,.plt td{padding:3px 2px;font-size:10px;font-weight:700}
+.plt th{font-size:9px;letter-spacing:0;line-height:1.1;vertical-align:bottom}
+.plt .gin{padding:4px 1px;font-size:11px;letter-spacing:0;border-radius:5px;text-align:center}
+.plt .pd{width:66px}
+.plt .pt{width:38px}
+.plt select.gin{width:46px;font-size:11px;letter-spacing:0;padding:4px 0}
+.plt .lw{display:flex;gap:2px;align-items:center}
+.plt .pdn{flex:none;width:18px;height:24px;border:1.5px solid var(--ct);border-radius:5px;background:transparent;color:var(--ct);display:grid;place-items:center;padding:0;cursor:pointer;touch-action:manipulation}
+.plt .pdn:active{background:var(--ct);color:#fff}
+.plt .gin.bad{border-color:#E5484D;box-shadow:0 0 0 1px #E5484D}
+.plt td:first-child{color:var(--muted)}
 </style>
 </head>
 <body>
@@ -299,7 +320,7 @@ function render(s){
  var ks=Object.keys(icons);
  nav.querySelectorAll('button').forEach(function(b,i){b.classList.toggle('on',ks[i]===s.t)});
  title.textContent=s.t;show(s.t);
- if(s.s==='upload')showUpload();else if(s.s==='fh')showFreeHours();else if(s.s==='tally')showTally();
+ if(s.s==='upload')showUpload();else if(s.s==='fh')showFreeHours();else if(s.s==='sp')showStationProfile();else if(s.s==='cc')showCommodityClass();else if(s.s==='tally')showTally();else if(s.s==='plc')showPlacement();
  else if(s.s==='result'){if(UW.rows.length&&UW.station)processWgn(UW.station);else showUpload()}
  NP=false;updateBack();
 }
@@ -314,7 +335,7 @@ window.addEventListener('popstate',function(e){var i=e.state&&e.state.i!=null?e.
  m.addEventListener('touchstart',function(e){var t=e.touches[0];x0=t.clientX;y0=t.clientY},{passive:true});
  m.addEventListener('touchend',function(e){var t=e.changedTouches[0],dx=t.clientX-x0,dy=t.clientY-y0;if(Math.abs(dy)>60||Math.abs(dx)<90)return;if(dx>0&&x0<50)nav2(-1);else if(dx<0&&x0>innerWidth-50)nav2(1)},{passive:true});
 })();
-var inwardItems=[["UPLOAD WGN NO.","M12 16V4m0 0l-4 4m4-4l4 4M4 20h16"],["INWARD TALLY","M9 11l3 3 8-8M5 5h6M5 12h2M5 19h14"],["W.T.R.","M6 3h9l4 4v14H6zM14 3v5h5M9 13h6M9 17h6"],["DELIVERY BOOK","M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2zM4 19a2 2 0 0 1 2-2h13"]];
+var inwardItems=[["UPLOAD WGN NO.","M12 16V4m0 0l-4 4m4-4l4 4M4 20h16"],["INWARD TALLY","M9 11l3 3 8-8M5 5h6M5 12h2M5 19h14"],["PLACEMENT PARTICULARS","M8 3L4 21M16 3l4 18M7 7h10M6 12h12M5 17h14"],["W.T.R.","M6 3h9l4 4v14H6zM14 3v5h5M9 13h6M9 17h6"],["DELIVERY BOOK","M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2zM4 19a2 2 0 0 1 2-2h13"]];
 var UW={rows:[]};
 function stmsg(t){umsg(t,true)}
 function stationPanel(){return '<div class=gpanel><div id=stmsg class=umsg></div><button type=button class="gbtn pri" id=prc>PROCESS</button></div>'}
@@ -587,7 +608,7 @@ function tallyForm(){
  +'<div class=fld><div class=stl>TOTAL (FREIGHT + G.S.T.)</div><input id=tot class=gina type=text readonly value="0"></div>'
  +'<div class=fld><div class=stl>LOCAL / FOREIGN</div><div class=rg>'+ropts('lf',['LOCAL','FOREIGN'],0)+'</div></div>'
  +'<div class=fld><div class=stl>DELIVERY NO.</div><div class=dwrap><input id=dno class=gina type=text readonly maxlength=30 autocapitalize=characters><button type=button class=ebtn id=dedit title="EDIT DELIVERY NO." aria-label="Edit delivery no."><svg width=20 height=20 viewBox="0 0 24 24" fill=none stroke=currentColor stroke-width=2 stroke-linecap=round stroke-linejoin=round><path d="M12 20h9"></path><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"></path></svg></button></div><div id=lastno class=lastno></div><div id=dnerr class="lastno err"></div></div>'
- +'<div class=fld><div class=stl>CLASS</div><input id=cls class=gina type=text readonly value="130A"></div>'
+ +'<div class=fld><div class=stl>CLASS</div><input id=cls class=gina type=text readonly value="" placeholder="LOADING..."></div>'
  +'<div class=fld><div class=stl>STATUS</div><input id=sts class=gina type=text readonly></div>'
  +'<div id=tfm class=umsg></div><div class=urow><button type=button class=gbtn id=tclr>CLEAR</button><button type=button class="gbtn pri" id=tsub>SUBMIT</button></div>';
 }
@@ -655,9 +676,10 @@ function bindTally(){
   if(cw&&!/^\d+(\.\d)?$/.test(cw)){msg('CHARGE WEIGHT: MAX 1 DECIMAL',true);return}
   var lf0=lfv(),dn=$('dno').value.trim().toUpperCase(),dne=dnErr(dn,lf0);
   if(dne){msg(dne,true);return}
+  if(!$('cls').value){msg(CCN?'COMMODITY CLASS NOT DEFINED - SET IT IN ADMIN > COMMODITY CLASS':'COMMODITY CLASS NOT LOADED - TRY AGAIN',true);return}
   var st=$('sts').value,dv=function(v){return v===''?'--':String(v)};
   var lf=lfv(),rid=$('rkSel').value,total=(+fr||0)+(+gs||0),p=function(n){return String(n).padStart(2,'0')},nw=new Date();
-  var entry={RR_NUMBER:rn,RR_DATE:dt,CHARGE_WEIGHT:cw===''?'':+cw,FREIGHT:fr===''?'':+fr,GST:gs===''?'':+gs,TOTAL:total,LOCAL_FOREIGN:lf,DELIVERY_NO:dn,CLASS:'130A',STATUS:st,TALLY_AT:p(nw.getDate())+'/'+p(nw.getMonth()+1)+'/'+nw.getFullYear()+' '+p(nw.getHours())+':'+p(nw.getMinutes())+':'+p(nw.getSeconds())};
+  var entry={RR_NUMBER:rn,RR_DATE:dt,CHARGE_WEIGHT:cw===''?'':+cw,FREIGHT:fr===''?'':+fr,GST:gs===''?'':+gs,TOTAL:total,LOCAL_FOREIGN:lf,DELIVERY_NO:dn,CLASS:$('cls').value,STATUS:st,TALLY_AT:p(nw.getDate())+'/'+p(nw.getMonth()+1)+'/'+nw.getFullYear()+' '+p(nw.getHours())+':'+p(nw.getMinutes())+':'+p(nw.getSeconds())};
   if(!/^https:\/\//.test(RAKE_API)){msg('INWARD_NO SHEET NOT CONNECTED',true);return}
   msg('');
   tcBox([['RAKE ID',rid],['RR NUMBER',dv(rn)],['RR DATE',dv(dt)],['CHARGE WEIGHT (CWT)',dv(cw)],['FREIGHT (EXCL. G.S.T.)',dv(fr)],['G.S.T.',dv(gs)],['TOTAL',String(total)],['LOCAL / FOREIGN',lf],['STATION TO',(TL.rake&&TL.rake.STATION_TO)||'--'],['DELIVERY NO.',dn],['CLASS','130A'],['STATUS',dv(st)]],function(done){
@@ -715,9 +737,243 @@ function loadRake(id){
   if(!j.data)throw new Error('SRV:'+(j.found===false?'RAKE NOT FOUND':'OUTDATED'));
   TL.dn=j.dn||null;
   TL.rake=j.data;tm.textContent='';
-  info.innerHTML=rakeInfo(j.data);fm.innerHTML=tallyForm();bindTally();tList();
+  info.innerHTML=rakeInfo(j.data);fm.innerHTML=tallyForm();bindTally();tList();tallyClass(id);
   if(j.data.TALLY&&j.data.TALLY.length===1&&TL.fill)TL.fill(j.data.TALLY[0]);
  }).catch(function(e){var m=String(e&&e.message||'');tm.className='umsg err';tm.textContent=m==='SRV:OUTDATED'?'SCRIPT IS OUTDATED - DEPLOY THE NEW VERSION IN APPS SCRIPT':m.indexOf('SRV:')===0?m.slice(4).toUpperCase().slice(0,80):'COULD NOT LOAD - CHECK INTERNET AND TRY AGAIN'});
+}
+// ---- PLACEMENT PARTICULARS (Inward) ----
+var PL={data:{}},PLT=0;
+function plArr(v){
+ if(typeof v==='string'){try{v=JSON.parse(v)}catch(e){v=v.split(',')}}
+ return Array.isArray(v)?v.map(function(x){return String(x).trim()}).filter(Boolean):[];
+}
+function plWagons(d){
+ var w=d&&d.WAGON_SUMMARY;
+ if(typeof w==='string'){try{w=JSON.parse(w)}catch(e){w=null}}
+ return Array.isArray(w)?w:[];
+}
+function plInward(d){
+ if(String(d.STATUS||'').trim().toUpperCase()==='INWARD')return true;
+ var t=d.TALLY;
+ if(typeof t==='string'){try{t=JSON.parse(t)}catch(e){t=null}}
+ return Array.isArray(t)&&t.some(function(e){return String((e&&e.STATUS)||'').trim().toUpperCase()==='INWARD'});
+}
+function plLines(st){
+ if(!spOk())return Promise.reject(new Error('SRV:STATION SHEET NOT CONNECTED'));
+ return fetch(STATION_API+'?action=get&code='+encodeURIComponent(st)+'&t='+Date.now()).then(function(r){return r.json()}).then(function(j){
+  if(!j||!j.ok)throw new Error('SRV:'+((j&&j.error)||'failed'));
+  if(typeof j.found!=='boolean')throw new Error('SRV:SCRIPT IS OUTDATED - DEPLOY THE NEW VERSION IN APPS SCRIPT');
+  return {found:j.found,lines:(j.found&&j.data)?plArr(j.data.INWARD_LINES):[]};
+ });
+}
+function plTable(box,d,lines,warn){
+ var w=plWagons(d),
+  q=function(x){return esc(x==null||x===''?'--':x)},
+  lo=lines.length?'<option value="" selected disabled>LINE</option>'+lines.map(function(l){return '<option>'+esc(l)+'</option>'}).join(''):'<option value="" selected disabled>NONE</option>',
+  dn='<button type=button class=pdn title="Fill details below (F7)" aria-label="Fill details below"><svg width=14 height=14 viewBox="0 0 24 24" fill=none stroke=currentColor stroke-width=3 stroke-linecap=round stroke-linejoin=round><path d="M6 9l6 6 6-6"></path></svg></button>';
+ box.innerHTML=(warn?'<div class="umsg err">'+esc(warn)+'</div>':'')
+  +'<div class=stl>WAGONS ('+w.length+') - F7 OR &#9660; FILLS ROWS BELOW</div><div class=tw><table class=plt><thead><tr><th>NO.</th><th>RLY</th><th>TYPE</th><th>WGN NO.</th><th>DATE</th><th>TIME</th><th>LINE</th></tr></thead><tbody>'
+  +w.map(function(x,i){return '<tr><td>'+(i+1)+'</td><td>'+q(x.RLY)+'</td><td>'+q(x.TYPE)+'</td><td>'+q(x.NO)+'</td>'
+   +'<td><input class="gin pd" type=text inputmode=numeric maxlength=10 autocomplete=off placeholder="DD/MM/YYYY" aria-label="Placement date"></td>'
+   +'<td><input class="gin pt" type=text inputmode=numeric maxlength=5 autocomplete=off placeholder="HH:MM" aria-label="Placement time"></td>'
+   +'<td><div class=lw><select class="gin pl" aria-label="Line no."'+(lines.length?'':' disabled')+'>'+lo+'</select>'+dn+'</div></td></tr>'}).join('')
+  +'</tbody></table></div>';
+ var tb=box.querySelector('tbody'),tm=/^([01]\d|2[0-3]):[0-5]\d$/;
+ var now=function(){var n=new Date(),p=function(x){return String(x).padStart(2,'0')};return {d:p(n.getDate())+'/'+p(n.getMonth()+1)+'/'+n.getFullYear(),h:n.getHours(),m:n.getMinutes(),y:n.getFullYear()}};
+ var flash=function(el){el.classList.add('bad');clearTimeout(el._f);el._f=setTimeout(function(){el.classList.remove('bad')},700)};
+ var dOkP=function(v){
+  var L=v.length,dd=0,mm;
+  if(L>=1&&+v[0]>3)return false;
+  if(L>=2){dd=+v.slice(0,2);if(dd<1||dd>31)return false}
+  if(L>=3&&+v[2]>1)return false;
+  if(L>=4){mm=+v.slice(2,4);if(mm<1||mm>12)return false;if(dd>[31,29,31,30,31,30,31,31,30,31,30,31][mm-1])return false}
+  if(L>=5&&v[4]!=='2')return false;
+  if(L>=7&&+v.slice(4,7)>+String(now().y).slice(0,3))return false;
+  if(L===8&&vDate(v.slice(0,2)+'/'+v.slice(2,4)+'/'+v.slice(4)))return false;
+  return true;
+ };
+ var tOkP=function(v,ds){
+  var L=v.length,n=now();
+  if(L>=1&&+v[0]>2)return false;
+  if(L>=2&&+v.slice(0,2)>23)return false;
+  if(L>=3&&+v[2]>5)return false;
+  if(ds===n.d){
+   if(L>=2&&+v.slice(0,2)>n.h)return false;
+   if(L===4&&+v.slice(0,2)===n.h&&+v.slice(2)>n.m)return false;
+  }
+  return true;
+ };
+ var chk=function(tr){
+  var d1=tr.querySelector('.pd'),t1=tr.querySelector('.pt'),n=now(),bad=false;
+  if(t1.value.length===5&&d1.value===n.d){var hm=t1.value.split(':');if(+hm[0]>n.h||(+hm[0]===n.h&&+hm[1]>n.m))bad=true}
+  t1.classList.toggle('bad',bad);
+ };
+ tb.oninput=function(e){
+  var t=e.target,tr=t.closest('tr');if(!tr)return;
+  if(t.classList.contains('pd')){
+   var v=t.value.replace(/[^0-9]/g,'').slice(0,8);
+   if(!dOkP(v)){v=(t.getAttribute('data-g')||'').replace(/[^0-9]/g,'');flash(t)}
+   t.value=v.slice(0,2)+(v.length>2?'/'+v.slice(2,4):'')+(v.length>4?'/'+v.slice(4):'');t.setAttribute('data-g',t.value);
+   var t2=tr.querySelector('.pt');if(t2.value.length===5&&!tOkP(t2.value.replace(':',''),t.value))flash(t2);
+  }else if(t.classList.contains('pt')){
+   var h=t.value.replace(/[^0-9]/g,'').slice(0,4),ds=tr.querySelector('.pd').value;
+   if(!tOkP(h,ds)){h=(t.getAttribute('data-g')||'').replace(/[^0-9]/g,'');flash(t)}
+   t.value=h.slice(0,2)+(h.length>2?':'+h.slice(2):'');t.setAttribute('data-g',t.value);
+  }
+ };
+ var fill=function(tr){
+  var d1=tr.querySelector('.pd'),t1=tr.querySelector('.pt'),l1=tr.querySelector('.pl'),
+   dg=d1.value.replace(/[^0-9]/g,''),dv=dg.length===8?dg.slice(0,2)+'/'+dg.slice(2,4)+'/'+dg.slice(4):'',tv=tm.test(t1.value)?t1.value:'',lv=(!l1.disabled&&l1.value)?l1.value:'';
+  if(d1.value&&!dv)flash(d1);
+  if(t1.value&&!tv)flash(t1);
+  var r=tr.nextElementSibling;
+  while(r){
+   if(dv){var a=r.querySelector('.pd');a.value=dv;a.setAttribute('data-g',dv)}
+   if(tv){var b=r.querySelector('.pt');b.value=tv;b.setAttribute('data-g',tv)}
+   if(lv)r.querySelector('.pl').value=lv;
+   chk(r);r=r.nextElementSibling;
+  }
+ };
+ var hit=function(e){var b=e.target.closest&&e.target.closest('.pdn');if(b){e.preventDefault();fill(b.closest('tr'))}};
+ tb.addEventListener('pointerdown',hit);tb.addEventListener('click',hit);
+ tb.addEventListener('keydown',function(e){
+  if(e.key==='F7'||e.keyCode===118||(e.ctrlKey&&e.key==='ArrowDown')){var tr=e.target.closest&&e.target.closest('tr');if(tr){e.preventDefault();e.stopPropagation();fill(tr)}}
+ },true);
+}
+function showPlacement(){
+ var gl=document.getElementById('glist'),$=function(x){return document.getElementById(x)},tok=++PLT;
+ gl.classList.add('wide','pl');document.querySelector('main').classList.add('top');
+ PL.data={};
+ gl.innerHTML='<h3>PLACEMENT PARTICULARS</h3><div class=gpanel><div class=stl>SELECT RAKE ID</div><select id=plSel class=gin disabled><option value="" selected disabled>CHECKING...</option></select><div id=plm class=umsg></div><div id=plInfo class=wcw></div><div id=plBox class=wcw></div></div>';
+ gl.hidden=false;document.querySelector('.card').hidden=true;
+ var M=function(t,e){var m=$('plm');if(m&&tok===PLT){m.textContent=t;m.className='umsg'+(e?' err':'')}};
+ var P=function(t,e){var b=$('plBox');if(b)b.innerHTML='<div class="umsg'+(e?' err':'')+'">'+esc(t)+'</div>'};
+ var sel=$('plSel');
+ if(!/^https:\/\//.test(RAKE_API)){sel.innerHTML='<option value="" selected disabled>NOT AVAILABLE</option>';M('INWARD_NO SHEET NOT CONNECTED',true);return}
+ sel.onchange=function(){
+  var id=this.value,d=PL.data[id],info=$('plInfo'),box=$('plBox');
+  info.innerHTML='';box.innerHTML='';
+  if(!d)return;
+  info.innerHTML=rakeInfo(d);
+  var st=String(d.STATION_TO||'').trim().toUpperCase();
+  if(!plWagons(d).length){P('NO WAGON DATA FOUND FOR THIS RAKE',true);return}
+  if(!st){P('STATION TO NOT FOUND FOR THIS RAKE',true);return}
+  P('LOADING INWARD LINES OF '+st+'...');
+  var live=function(){var s=$('plSel');return tok===PLT&&s&&s.value===id};
+  plLines(st).then(function(r){
+   if(!live())return;
+   var warn='';
+   if(!r.found)warn='STATION PROFILE NOT FOUND FOR '+st+' - ADD IT IN ADMIN > STATION PROFILE';
+   else if(!r.lines.length)warn='NO INWARD LINES DEFINED FOR '+st+' IN STATION PROFILE';
+   plTable(box,d,r.lines,warn);
+  }).catch(function(e){if(live())plTable(box,d,[],'INWARD LINES NOT LOADED - '+spErr(e))});
+ };
+ M('CHECKING RAKE STATUS...');
+ fetch(RAKE_API+'?action=list&t='+Date.now()).then(function(r){return r.json()}).then(function(j){
+  if(!j||!j.ok)throw new Error('SRV:'+((j&&j.error)||'failed'));
+  if(!Array.isArray(j.ids))throw new Error('SRV:SCRIPT IS OUTDATED - DEPLOY THE NEW VERSION IN APPS SCRIPT');
+  var ids=j.ids.slice().reverse(),total=ids.length,nx=0,done=0,found=0,fail=0;
+  if(!total){sel.innerHTML='<option value="" selected disabled>NO RAKE FOUND</option>';M('');return}
+  M('CHECKING RAKE STATUS 0/'+total);
+  var add=function(i,id){
+   var s=$('plSel');if(!s)return;
+   if(s.disabled){s.disabled=false;s.options[0].textContent='SELECT RAKE ID'}
+   var o=document.createElement('option'),k=s.options,pos=null,n;
+   o.value=id;o.textContent=id;o.setAttribute('data-i',i);
+   for(n=1;n<k.length;n++){if(+k[n].getAttribute('data-i')>i){pos=k[n];break}}
+   s.insertBefore(o,pos);
+  };
+  var next=function(){
+   if(tok!==PLT||!$('plSel')||nx>=total)return Promise.resolve();
+   var i=nx++,id=ids[i];
+   return fetch(RAKE_API+'?action=get&id='+encodeURIComponent(id)+'&t='+Date.now()).then(function(r){return r.json()}).then(function(k){
+    if(tok!==PLT)return;
+    if(!k||!k.ok||!k.data)throw new Error('x');
+    if(plInward(k.data)){PL.data[id]=k.data;found++;add(i,id)}
+   }).catch(function(){fail++}).then(function(){done++;if(done<total)M('CHECKING RAKE STATUS '+done+'/'+total);return next()});
+  };
+  var w=[],n;for(n=0;n<5;n++)w.push(next());
+  return Promise.all(w).then(function(){
+   if(tok!==PLT)return;
+   if(!found){var s=$('plSel');if(s)s.innerHTML='<option value="" selected disabled>NO RAKE WITH STATUS INWARD</option>'}
+   M(fail?fail+' RAKE(S) COULD NOT BE CHECKED - OPEN THIS SCREEN AGAIN TO RETRY':'',!!fail);
+  });
+ }).catch(function(e){var m=String(e&&e.message||'');sel.innerHTML='<option value="" selected disabled>NOT AVAILABLE</option>';M(m.indexOf('SRV:')===0?m.slice(4).toUpperCase().slice(0,80):'COULD NOT LOAD - CHECK INTERNET AND TRY AGAIN',true)});
+}
+var COMMODITY_API='https://script.google.com/macros/s/AKfycbwIuS9AdX0EO9B9jqjKH3MagoR8JdnI8uwwphr-BlbijDtxl2tFHpzLiM7Bskn2sEwr1A/exec';
+var CCN='';
+function ccOk(){return /^https:\/\//.test(COMMODITY_API)}
+function ccLoad(){
+ return fetch(COMMODITY_API+'?action=list&t='+Date.now()).then(function(r){return r.json()}).then(function(j){
+  if(!j||!j.ok)throw new Error('SRV:'+((j&&j.error)||'failed'));
+  if(!Array.isArray(j.items))throw new Error('SRV:SCRIPT IS OUTDATED - DEPLOY THE NEW VERSION IN APPS SCRIPT');
+  return j.items;
+ });
+}
+function ccErr(e){var m=String(e&&e.message||'');return m.indexOf('SRV:')===0?m.slice(4).toUpperCase().slice(0,80):'CHECK INTERNET AND TRY AGAIN'}
+function tallyClass(id){
+ var c=document.getElementById('cls');if(!c)return;
+ var code=String((TL.rake&&TL.rake.COMMODITY_CODE)||'').trim().toUpperCase();
+ var set=function(v,ph){var e=document.getElementById('cls'),s=document.getElementById('rkSel');if(!e||!s||s.value!==id)return;e.value=v;e.placeholder=ph||'';CCN=v?'':'1'};
+ CCN='';
+ if(!ccOk()){set('','NOT CONNECTED');return}
+ if(!code){set('','NOT DEFINED');return}
+ ccLoad().then(function(items){
+  var cl='';items.forEach(function(x){if(x.code===code)cl=x.cls});
+  set(cl,'NOT DEFINED');
+ }).catch(function(){set('','NOT LOADED')});
+}
+function showCommodityClass(){
+ var gl=document.getElementById('glist');
+ gl.classList.remove('wide');document.querySelector('main').classList.remove('top');
+ gl.innerHTML='<h3>COMMODITY CLASS</h3><div class=gpanel><div id=ccm class=umsg></div><div id=ccl class=lcol></div><div class=urow><button type=button class="gbtn pri" id=ccs disabled>SAVE</button></div></div>';
+ gl.hidden=false;document.querySelector('.card').hidden=true;
+ var $=function(x){return document.getElementById(x)},M=function(t,e){var m=$('ccm');if(m){m.textContent=t;m.className='umsg'+(e?' err':'')}};
+ var rows={},cnt=0;
+ var CLR=/^[A-Z0-9 \/.\-()&_]{1,20}$/;
+ var upd=function(){var b=$('ccs');if(!b)return;var n=0;Object.keys(rows).forEach(function(k){var v=rows[k].inp.value.trim();if(v&&v!==rows[k].orig)n++});b.disabled=!n};
+ var add=function(code,cls){
+  var l=$('ccl');if(!l||rows[code])return;
+  var r=document.createElement('div');r.className='lrow';
+  var a=document.createElement('input');a.className='gina';a.readOnly=true;a.value=code;a.style.flex='1';a.style.minWidth='0';
+  var b=document.createElement('input');b.className='gin';b.type='text';b.maxLength=20;b.autocomplete='off';b.setAttribute('autocapitalize','characters');b.placeholder='CLASS';b.value=cls||'';b.style.flex='1';
+  b.oninput=function(){this.value=this.value.toUpperCase().replace(/[^A-Z0-9 \/.\-()&_]/g,'');upd()};
+  r.appendChild(a);r.appendChild(b);l.appendChild(r);rows[code]={inp:b,orig:cls||''};
+ };
+ if(!ccOk()){M('COMMODITY SHEET NOT CONNECTED',true);return}
+ if(!/^https:\/\//.test(RAKE_API)){M('INWARD_NO SHEET NOT CONNECTED',true);return}
+ M('LOADING...');
+ ccLoad().then(function(items){
+  items.forEach(function(x){add(x.code,x.cls)});
+  return fetch(RAKE_API+'?action=list&t='+Date.now()).then(function(r){return r.json()});
+ }).then(function(j){
+  if(!j||!j.ok||!Array.isArray(j.ids))throw new Error('SRV:'+((j&&j.error)||'RAKE LIST NOT AVAILABLE'));
+  var ids=j.ids.slice(),total=ids.length,done=0;
+  if(!total){M(Object.keys(rows).length?'':'NO COMMODITY FOUND');return}
+  M('SCANNING INWARD DATA 0/'+total);
+  var next=function(){
+   if(!$('ccl'))return Promise.resolve();
+   var id=ids.shift();if(id===undefined)return Promise.resolve();
+   return fetch(RAKE_API+'?action=get&id='+encodeURIComponent(id)+'&t='+Date.now()).then(function(r){return r.json()}).then(function(k){
+    var c=String((k&&k.data&&k.data.COMMODITY_CODE)||'').trim().toUpperCase();
+    if(c)add(c,'');
+   }).catch(function(){}).then(function(){done++;M('SCANNING INWARD DATA '+done+'/'+total);upd();return next()});
+  };
+  var w=[];for(var i=0;i<5;i++)w.push(next());
+  return Promise.all(w).then(function(){var n=Object.keys(rows).length;M(n?'DEFINE CLASS FOR EACH COMMODITY AND PRESS SAVE':'NO COMMODITY FOUND');upd()});
+ }).catch(function(e){M('NOT LOADED - '+ccErr(e),true)});
+ $('ccs').onclick=function(){
+  var items=[],bad='';
+  Object.keys(rows).forEach(function(k){var v=rows[k].inp.value.trim();if(v&&v!==rows[k].orig){if(!CLR.test(v))bad=k;items.push({code:k,cls:v})}});
+  if(bad){M('INVALID CLASS FOR '+bad,true);return}
+  if(!items.length)return;
+  var b=this;b.disabled=true;M('SAVING...');
+  fetch(COMMODITY_API,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:'save',items:items})}).then(function(r){return r.json()}).then(function(j){
+   if(!j||!j.ok)throw new Error('SRV:'+((j&&j.error)||'failed'));
+   items.forEach(function(x){if(rows[x.code])rows[x.code].orig=x.cls});
+   M('SAVED TO GOOGLE SHEET');
+  }).catch(function(e){M('NOT SAVED - '+ccErr(e),true)}).then(upd);
+ };
 }
 function showFreeHours(){
  var gl=document.getElementById('glist');
@@ -725,18 +981,161 @@ function showFreeHours(){
  gl.innerHTML='<h3>FREE HOURS</h3><div class=gpanel><div class="rg r3">'+ropts('mv',['INWARD','OUTWARD','BOTH'],0)+'</div><div class=stl>TYPE OF WAGON</div><div class=rg>'+ropts('wt',['OPEN WAGON','COVER WAGON','TANK WAGON','CONTAINER'],-1)+'</div><div id=wcw class=wcw></div><div id=rkt class=wcw></div><div id=fhb class=wcw></div><div id=fhs class=umsg></div></div>';
  gl.hidden=false;document.querySelector('.card').hidden=true;gl.onchange=fhUpd;fhUpd();fhPull();
 }
+// ---- STATION PROFILE (Admin) ----
+var STATION_API='https://script.google.com/macros/s/AKfycbyR_GqILVf5dm091391BXyxP4KqgyZk01f6FF6439cK4upXe7XEIBUt7FWdsSSmK78_xA/exec';
+var GJ_DISTRICTS=['Morbi','Devbhoomi Dwarka','Jamnagar','Rajkot','Surendranagar'].map(function(x){return x.toUpperCase()});
+var STN_TYPES=['GOODS SHED','PRIVATE SIDING','RAILWAY SIDING','PRIVATE FREIGHT TERMINAL (PFT)'];
+var SP={mode:'new',code:'',rec:null};
+function spOk(){return /^https:\/\//.test(STATION_API)}
+function spMsg(t,e){var m=document.getElementById('spm');if(m){m.textContent=t;m.className='umsg'+(e?' err':'')}}
+function spErr(e){var m=String(e&&e.message||'');return m.indexOf('SRV:')===0?m.slice(4).toUpperCase().slice(0,80):'CHECK INTERNET AND TRY AGAIN'}
+function spLine(box,val,first){
+ var r=document.createElement('div');r.className='lrow';
+ var i=document.createElement('input');i.className='gin';i.type='text';i.maxLength=20;i.placeholder='LINE NO. (E.G. I/W, O/W, LOOSE-3)';i.setAttribute('autocapitalize','characters');i.value=val||'';
+ i.oninput=function(){this.value=this.value.toUpperCase().replace(/[^A-Z0-9 \/.\-()&_]/g,'')};
+ var b=document.createElement('button');b.type='button';b.className='lbtn';
+ if(first){b.textContent='+';b.setAttribute('aria-label','Add line');b.onclick=function(){spLine(box,'',false);var x=box.querySelectorAll('input');x[x.length-1].focus()}}
+ else{b.textContent='×';b.setAttribute('aria-label','Remove line');b.onclick=function(){r.remove()}}
+ r.appendChild(i);r.appendChild(b);box.appendChild(r);
+}
+function spLines(id,arr){var b=document.getElementById(id);b.innerHTML='';arr=arr&&arr.length?arr:[''];arr.forEach(function(v,i){spLine(b,v,i===0)})}
+function spGetLines(id){return [].map.call(document.querySelectorAll('#'+id+' input'),function(x){return x.value.trim()}).filter(Boolean)}
+function spTimes(){var t=document.querySelector('input[name=wh]:checked'),on=!!(t&&t.value==='OTHER'),b=document.getElementById('spt');if(b)b.style.display=on?'':'none';var f=document.getElementById('spfr'),o=document.getElementById('spto');if(on&&f&&o&&!f.value&&!o.value){f.value='06:00';o.value='22:00'}}
+function spLock(l){document.querySelectorAll('#spf input,#spf select,#spf .lbtn').forEach(function(x){x.disabled=l})}
+function spMode(m){
+ SP.mode=m;
+ var n=document.getElementById('spn'),x=document.getElementById('spx');
+ n.hidden=(m!=='new');x.hidden=(m==='new');
+ if(m==='new'){spLock(false);return}
+ spLock(true);
+ document.getElementById('sped').textContent='EDIT';
+ document.getElementById('spup').disabled=true;
+}
+function spFill(d){
+ var $=function(x){return document.getElementById(x)};
+ $('spn1').value=d.STATION_NAME||'';$('spd').value=d.DISTRICT||'';$('spty').value=d.TYPE||'';
+ var wm=/^(\d\d:\d\d)-(\d\d:\d\d)$/.exec(String(d.WORKING_HOURS||''));
+ var r=document.querySelector('input[name=wh][value="'+(wm?'OTHER':'24 HRS.')+'"]');if(r)r.checked=true;
+ $('spfr').value=wm?wm[1]:'';$('spto').value=wm?wm[2]:'';
+ spLines('spo',d.OUTWARD_LINES);spLines('spi',d.INWARD_LINES);spTimes();
+}
+function spReset(clearCode){
+ SP.code='';SP.rec=null;
+ spFill({});
+ if(clearCode)document.getElementById('spc').value='';
+ spMode('new');
+}
+function spRead(){
+ var $=function(x){return document.getElementById(x)},tm=/^([01]\d|2[0-3]):[0-5]\d$/;
+ var code=$('spc').value.trim(),name=$('spn1').value.trim().replace(/\s+/g,' '),dist=$('spd').value,ty=$('spty').value;
+ if(code.length<2)return 'ENTER STATION CODE (MIN. 2 CHARACTERS)';
+ if(!name)return 'ENTER STATION NAME';
+ if(!dist)return 'SELECT DISTRICT';
+ if(!ty)return 'SELECT TYPE';
+ var wh=document.querySelector('input[name=wh]:checked'),w=wh?wh.value:'24 HRS.',fr='',to='',hrs='24 HRS.';
+ if(w==='OTHER'){
+  fr=$('spfr').value.trim();to=$('spto').value.trim();
+  if(!tm.test(fr))return 'ENTER FROM TIME IN 24 HRS. FORMAT (HH:MM)';
+  if(!tm.test(to))return 'ENTER TO TIME IN 24 HRS. FORMAT (HH:MM)';
+  if(fr===to)return 'FROM AND TO TIME CANNOT BE SAME';
+  hrs=fr+'-'+to;
+ }
+ var o=spGetLines('spo'),i=spGetLines('spi');
+ var dup=function(a){return a.some(function(v,k){return a.indexOf(v)!==k})};
+ if(dup(o))return 'DUPLICATE LINE NO. IN OUTWARD LINES';
+ if(dup(i))return 'DUPLICATE LINE NO. IN INWARD LINES';
+ if(!o.length&&!i.length)return 'ADD AT LEAST ONE OUTWARD OR INWARD LINE';
+ return {STATION_CODE:code,STATION_NAME:name,DISTRICT:dist,TYPE:ty,WORKING_HOURS:hrs,OUTWARD_LINES:o,INWARD_LINES:i};
+}
+function spLookup(){
+ var c=document.getElementById('spc').value.trim();
+ if(c.length<2||(SP.mode==='existing'&&c===SP.code))return;
+ if(!spOk()){spMsg('STATION SHEET NOT CONNECTED',true);return}
+ spMsg('CHECKING...');
+ fetch(STATION_API+'?action=get&code='+encodeURIComponent(c)+'&t='+Date.now()).then(function(r){return r.json()}).then(function(j){
+  var e=document.getElementById('spc');if(!e||e.value.trim()!==c)return;
+  if(!j||!j.ok)throw new Error('SRV:'+((j&&j.error)||'failed'));
+  if(typeof j.found!=='boolean')throw new Error('SRV:SCRIPT IS OUTDATED - DEPLOY THE NEW VERSION IN APPS SCRIPT');
+  if(j.found){
+   SP.code=c;SP.rec=j.data;spFill(j.data);spMode('existing');spMsg('');
+   dupPopup(c,'ALREADY EXISTS','STATION PROFILE ALREADY EXISTS');
+  }else spMsg('NEW STATION - ENTER DETAILS');
+ }).catch(function(e){spMsg('NOT CHECKED - '+spErr(e),true)});
+}
+function spPost(body){
+ return fetch(STATION_API,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(body)}).then(function(r){return r.json()}).then(function(j){
+  if(!j||!j.ok)throw new Error('SRV:'+((j&&j.error)||'failed'));return j});
+}
+function showStationProfile(){
+ var gl=document.getElementById('glist'),$=function(x){return document.getElementById(x)};
+ gl.classList.remove('wide');document.querySelector('main').classList.remove('top');
+ SP={mode:'new',code:'',rec:null};
+ var opt=function(a,ph){return '<option value="" selected disabled>'+ph+'</option>'+a.map(function(v){return '<option>'+esc(v)+'</option>'}).join('')};
+ gl.innerHTML='<h3>STATION PROFILE</h3><div class=gpanel>'
+ +'<div class=fld><div class=stl>STATION CODE</div><input id=spc class=gin type=text maxlength=6 autocapitalize=characters autocomplete=off placeholder="E.G. RJT"></div>'
+ +'<div id=spf class=wcw>'
+ +'<div class=fld><div class=stl>STATION NAME</div><input id=spn1 class=gin type=text maxlength=40 autocapitalize=characters autocomplete=off placeholder="STATION NAME"></div>'
+ +'<div class=fld><div class=stl>DISTRICT</div><select id=spd class=gin>'+opt(GJ_DISTRICTS,'SELECT DISTRICT')+'</select></div>'
+ +'<div class=fld><div class=stl>TYPE</div><select id=spty class=gin>'+opt(STN_TYPES,'SELECT TYPE')+'</select></div>'
+ +'<div class=fld><div class=stl>WORKING HOURS</div><div class=rg>'+ropts('wh',['24 HRS.','OTHER'],0)+'</div></div>'
+ +'<div id=spt class=rg style="display:none"><div class=fld><div class=stl>FROM (24 HRS.)</div><input id=spfr class=gin type=text inputmode=numeric maxlength=5 placeholder="HH:MM"></div><div class=fld><div class=stl>TO (24 HRS.)</div><input id=spto class=gin type=text inputmode=numeric maxlength=5 placeholder="HH:MM"></div></div>'
+ +'<div class=fld><div class=stl>OUTWARD LINES</div><div id=spo class=lcol></div></div>'
+ +'<div class=fld><div class=stl>INWARD LINES</div><div id=spi class=lcol></div></div>'
+ +'</div><div id=spm class=umsg></div>'
+ +'<div class=urow id=spn><button type=button class=gbtn id=spclr>CLEAR</button><button type=button class="gbtn pri" id=spsub>SUBMIT</button></div>'
+ +'<div class=urow id=spx hidden><button type=button class=gbtn id=sped>EDIT</button><button type=button class="gbtn pri" id=spup disabled>UPDATE</button></div></div>';
+ gl.hidden=false;document.querySelector('.card').hidden=true;
+ spLines('spo');spLines('spi');spMode('new');
+ var cd=$('spc');
+ cd.oninput=function(){
+  this.value=this.value.toUpperCase().replace(/[^A-Z0-9]/g,'');
+  if(SP.mode==='existing'&&this.value!==SP.code){spReset(false);spMsg('')}
+ };
+ cd.onchange=spLookup;
+ cd.onkeydown=function(e){if(e.key==='Enter'){e.preventDefault();this.blur()}};
+ $('spn1').oninput=function(){this.value=this.value.toUpperCase().replace(/[^A-Z0-9 .&()\/-]/g,'')};
+ var mask=function(){var d=this.value.replace(/[^0-9]/g,'').slice(0,4);this.value=d.slice(0,2)+(d.length>2?':'+d.slice(2):'')};
+ $('spfr').oninput=mask;$('spto').oninput=mask;
+ gl.onchange=function(e){if(e.target&&e.target.name==='wh')spTimes()};
+ $('spclr').onclick=function(){spReset(true);spMsg('')};
+ $('spsub').onclick=function(){
+  var r=spRead();if(typeof r==='string'){spMsg(r,true);return}
+  if(!spOk()){spMsg('STATION SHEET NOT CONNECTED',true);return}
+  var b=this;b.disabled=true;spMsg('SAVING...');
+  spPost({action:'saveStation',data:r}).then(function(j){
+   if(j.duplicate){spMsg('');spLookup();return}
+   if(!j.saved)throw new Error('SRV:SCRIPT IS OUTDATED - DEPLOY THE NEW VERSION IN APPS SCRIPT');
+   spReset(true);spMsg('SAVED TO GOOGLE SHEET');
+  }).catch(function(e){spMsg('NOT SAVED - '+spErr(e),true)}).then(function(){b.disabled=false});
+ };
+ $('sped').onclick=function(){
+  if(this.textContent==='CANCEL'){spFill(SP.rec||{});spMode('existing');spMsg('');return}
+  spLock(false);$('spup').disabled=false;this.textContent='CANCEL';spMsg('EDIT THE DETAILS AND PRESS UPDATE');
+ };
+ $('spup').onclick=function(){
+  var r=spRead();if(typeof r==='string'){spMsg(r,true);return}
+  if(!spOk()){spMsg('STATION SHEET NOT CONNECTED',true);return}
+  var b=this;b.disabled=true;spMsg('UPDATING...');
+  spPost({action:'updateStation',data:r}).then(function(j){
+   if(j.found===false)throw new Error('SRV:STATION NOT FOUND');
+   if(!j.updated)throw new Error('SRV:SCRIPT IS OUTDATED - DEPLOY THE NEW VERSION IN APPS SCRIPT');
+   SP.rec=r;SP.code=r.STATION_CODE;spFill(r);spMode('existing');spMsg('UPDATED IN GOOGLE SHEET');
+  }).catch(function(e){spMsg('NOT UPDATED - '+spErr(e),true);b.disabled=false});
+ };
+}
 function toast(){var t=document.getElementById("toast");t.classList.add("on");clearTimeout(toast.t);toast.t=setTimeout(function(){t.classList.remove("on")},1500)}
 function show(k){
  var card=document.querySelector(".card"),gl=document.getElementById("glist");
- gl.classList.remove("wide");document.querySelector("main").classList.remove("top");
+ gl.classList.remove("wide","pl");document.querySelector("main").classList.remove("top");
  if(k==="ADMIN"){
-  gl.innerHTML='<h3>ADMIN</h3><button class="gbtn" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span>FREE HOURS</span></button>';
-  gl.querySelector(".gbtn").onclick=function(){go({t:'ADMIN',s:'fh'})};
+  var ai=[['FREE HOURS','<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>','fh'],['STATION PROFILE','<path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/>','sp'],['COMMODITY CLASS','<path d="M3 7l9-4 9 4-9 4-9-4z"/><path d="M3 12l9 4 9-4"/><path d="M3 17l9 4 9-4"/>','cc']];
+  gl.innerHTML='<h3>ADMIN</h3>'+ai.map(function(i){return '<button class="gbtn" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">'+i[1]+'</svg><span>'+i[0]+'</span></button>'}).join("");
+  gl.querySelectorAll(".gbtn").forEach(function(g,k){g.onclick=function(){go({t:'ADMIN',s:ai[k][2]})}});
   gl.hidden=false;card.hidden=true;return;
  }
  if(k==="INWARD"){
   gl.innerHTML='<h3>INWARD</h3>'+inwardItems.map(function(i){return '<button class="gbtn" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="'+i[1]+'"/></svg><span>'+i[0]+'</span></button>'}).join("");
-  gl.querySelectorAll(".gbtn").forEach(function(g,i){g.onclick=i===0?function(){go({t:'INWARD',s:'upload'})}:i===1?function(){go({t:'INWARD',s:'tally'})}:toast});
+  gl.querySelectorAll(".gbtn").forEach(function(g,i){g.onclick=i===0?function(){go({t:'INWARD',s:'upload'})}:i===1?function(){go({t:'INWARD',s:'tally'})}:i===2?function(){go({t:'INWARD',s:'plc'})}:toast});
   gl.hidden=false;card.hidden=true;
  }else{gl.hidden=true;card.hidden=false}
 }
@@ -763,7 +1162,7 @@ btn.onclick=function(){
  try{localStorage.setItem("theme",n)}catch(e){}
  paint();
 };
-function dupPopup(id){
+function dupPopup(id,t,m){
  var o=document.getElementById('dup');
  if(!o){
   o=document.createElement('div');o.id='dup';o.hidden=true;
@@ -774,7 +1173,7 @@ function dupPopup(id){
   o.addEventListener('click',function(e){if(e.target===o)cl()});
   document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!o.hidden)cl()});
  }
- document.getElementById('dupK').textContent=id;
+ document.getElementById('dupT').textContent=t||'DUPLICATE ENTRY';document.getElementById('dupM').textContent=m||'DATA ALREADY EXISTS';document.getElementById('dupK').textContent=id;
  o.hidden=false;document.getElementById('dupB').focus();
 }
 function fitHdr(){
