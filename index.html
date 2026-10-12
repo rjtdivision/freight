@@ -211,6 +211,10 @@ select.gin{cursor:pointer;letter-spacing:.06em;font-size:15px}
 select.gin:disabled{cursor:not-allowed}
 .mini{display:grid;grid-template-columns:1fr 1fr;gap:5px 12px;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--surface);font-size:10.5px;line-height:1.3;font-weight:700}
 .mini div{min-width:0;word-break:break-word}.mini .f{grid-column:1/-1}
+.mini .l7{grid-column:1;grid-row:7}.mini .l8{grid-column:1;grid-row:8}
+.mini .fbox{grid-column:2;grid-row:7/span 2;align-self:center;display:flex;flex-direction:column;align-items:center;text-align:center;gap:1px;padding:5px 6px;border-radius:9px;background:var(--cyan);color:#04142F;box-shadow:0 0 0 2px rgba(0,209,240,.35),0 3px 10px rgba(0,169,206,.4)}
+.mini .fbox b{color:#04142F;opacity:.85;font-size:8.5px;letter-spacing:.1em}
+.mini .fbox .fd{font-size:12.5px;font-weight:800;letter-spacing:.02em;line-height:1.25}
 .mini b{display:block;color:var(--muted);font-size:8.5px;letter-spacing:.08em}
 #rkInfo:empty{display:none}
 .fld{display:flex;flex-direction:column;gap:6px}
@@ -584,9 +588,10 @@ function vDate(s){
  if(y<2000||t.getFullYear()!==y||t.getMonth()!==mo-1||t.getDate()!==d)return 'INVALID RR DATE';
  var n=new Date();n.setHours(0,0,0,0);if(t>n)return 'FUTURE DATE NOT ALLOWED';return '';
 }
-function rakeInfo(d){
- var c=function(l,v,f){return '<div'+(f?' class=f':'')+'><b>'+l+'</b>'+esc(v==null||v===''?'--':v)+'</div>'};
- return '<div class=mini>'+c('RAKE ID',d.RAKE_ID,1)+c('RAKE TYPE',d.RAKE_TYPE)+c('WAGON CODE',d.WAGON_CODE)+c('TYPE OF WAGON',d.TYPE_OF_WAGON)+c('NO. OF WAGONS',d.NO_OF_WAGONS)+c('STATION FROM',d.STATION_FROM)+c('STATION TO',d.STATION_TO)+c('INVOICE NO.',d.INVOICE_NO)+c('INVOICE DATE',d.INVOICE_DATE)+c('WEIGHT (T)',d.ACTUAL_WEIGHT_TONNE)+c('COMMODITY CODE',d.COMMODITY_CODE)+c('CONSIGNER',d.CONSIGNER,1)+c('CONSIGNEE',d.CONSIGNEE,1)+'</div>';
+function rakeInfo(d,fb){
+ var c=function(l,v,f){return '<div'+(f?' class='+(f===1?'f':f):'')+'><b>'+l+'</b>'+esc(v==null||v===''?'--':v)+'</div>'};
+ var box=fb?'<div class=fbox><b>FREE TIME UPTO</b><div id=wtFd class=fd>LOADING...</div></div>':'';
+ return '<div class=mini>'+c('RAKE ID',d.RAKE_ID,1)+c('RAKE TYPE',d.RAKE_TYPE)+c('WAGON CODE',d.WAGON_CODE)+c('TYPE OF WAGON',d.TYPE_OF_WAGON)+c('NO. OF WAGONS',d.NO_OF_WAGONS)+c('STATION FROM',d.STATION_FROM)+c('STATION TO',d.STATION_TO)+c('INVOICE NO.',d.INVOICE_NO)+c('INVOICE DATE',d.INVOICE_DATE)+c('WEIGHT (T)',d.ACTUAL_WEIGHT_TONNE)+c('COMMODITY CODE',d.COMMODITY_CODE)+c('CONSIGNER',d.CONSIGNER,fb?'l7':1)+c('CONSIGNEE',d.CONSIGNEE,fb?'l8':1)+box+'</div>';
 }
 function lastNo(t){return TL.dn?(TL.dn[t]||'NONE'):'--'}
 function nextNo(t){if(!TL.dn)return t+'/1/--';var l=TL.dn[t],m=/^(.*\/)(\d+)$/.exec(l||'');return m?m[1]+(+m[2]+1):t+'/1/1'}
@@ -978,6 +983,39 @@ function wtrPanel(d){
   +'<tr><td><button type=button id=wtNb class=wnb disabled>NIGHT INCENTIVE</button></td><td id=wtNv>LOADING...</td></tr>'+b('NET DETENTION')+b('DEMURRAGE HRS.')+b('DEMURRAGE AMOUNT')
   +'</table><div class=urow style="margin-top:14px"><button type=button class="gbtn pri" id=wtSub>SUBMIT</button></div>';
 }
+var WTF=null;
+function wtrFreeMsg(m){var a=document.getElementById('wtFd'),b=document.getElementById('wtFt');if(a)a.textContent=m;if(b)b.textContent='';WTF=null}
+// Free time upto (24 hrs working station).
+// Not a goods shed: placement date+time + free hrs.
+// Goods shed: night hours (22:00-06:00) count only 50% against the free hrs (night incentive).
+function wtrCalc(startMs,freeMin,goods){
+ var cur=startMs,rem=freeMin,night=0,g=0;
+ while(rem>0&&g++<400){
+  var dt=new Date(cur),h=dt.getHours(),isN=goods&&(h>=22||h<6),bd=new Date(cur);
+  if(isN){bd.setHours(6,0,0,0);if(h>=22)bd.setDate(bd.getDate()+1)}
+  else if(goods){bd.setHours(22,0,0,0)}
+  else{bd=null}
+  var rate=isN?0.5:1;
+  if(!bd){cur+=rem*60000;rem=0;break}
+  var realMin=(bd.getTime()-cur)/60000,credit=realMin*rate;
+  if(credit>=rem){var used=rem/rate;cur+=used*60000;if(isN)night+=used;rem=0}
+  else{cur=bd.getTime();rem-=credit;if(isN)night+=realMin}
+ }
+ return {ms:cur,nightMin:Math.round(night/2)};
+}
+function wtrHM(mn){return String(Math.floor(mn/60)).padStart(2,'0')+':'+String(mn%60).padStart(2,'0')}
+function wtrFree(pl,d,ty,wh){
+ var p=function(x){return String(x).padStart(2,'0')};
+ if(!ty){wtrFreeMsg('STATION TYPE NOT DEFINED IN PROFILE');return}
+ if(!(wh===''||wh==='24 HRS.')){wtrFreeMsg('LOGIC WILL BE ADDED LATER');return}
+ var fh=parseFloat(d.FREE_HOURS);
+ if(pl.ms===null||isNaN(fh)||fh<0){wtrFreeMsg('--');return}
+ var goods=(ty==='GOODS SHED'),r=wtrCalc(pl.ms,Math.round(fh*60),goods),t=new Date(r.ms);
+ WTF={ms:r.ms,nightMin:goods?r.nightMin:0};
+ var a=document.getElementById('wtFd'),n=document.getElementById('wtNi');
+ if(a)a.textContent=p(t.getDate())+'/'+p(t.getMonth()+1)+'/'+t.getFullYear()+' '+p(t.getHours())+':'+p(t.getMinutes());
+ if(n)n.value=wtrHM(r.nightMin)+' HRS';
+}
 var WTS='';
 function wtrBind(d,rid,M){
  var $=function(x){return document.getElementById(x)},
@@ -999,16 +1037,18 @@ function wtrBind(d,rid,M){
  rt.setAttribute('data-g',rt.value);calc();
  // night incentive is active only when the station type in Station Profile is GOODS SHED
  var nb=$('wtNb'),nv=$('wtNv'),stn=String(d.STATION_TO||'').trim().toUpperCase(),
-  nset=function(t,ok){if(!nv||!document.body.contains(nv))return;WTS=ok?'GOODS SHED':'';nb.disabled=!ok;nv.innerHTML=ok?'<input class=gina type=text readonly aria-label="Night incentive">':esc(t)};
+  nset=function(t,ok){if(!nv||!document.body.contains(nv))return;WTS=ok?'GOODS SHED':'';nb.disabled=!ok;nv.innerHTML=ok?'<input id=wtNi class=gina type=text readonly aria-label="Night incentive">':esc(t)};
  nb.onclick=function(){M('NIGHT INCENTIVE LOGIC WILL BE ADDED LATER')};
- if(!stn||!spOk()){nset('STATION TYPE NOT DEFINED IN PROFILE',false)}
+ if(!stn||!spOk()){nset('STATION TYPE NOT DEFINED IN PROFILE',false);wtrFreeMsg('STATION PROFILE NOT AVAILABLE')}
  else fetch(STATION_API+'?action=get&code='+encodeURIComponent(stn)+'&t='+Date.now()).then(function(r){return r.json()}).then(function(j){
   if(!j||!j.ok)throw new Error('x');
-  var ty=(j.found&&j.data)?String(j.data.TYPE||'').trim().toUpperCase():'';
+  var ty=(j.found&&j.data)?String(j.data.TYPE||'').trim().toUpperCase():'',
+   wh=(j.found&&j.data)?String(j.data.WORKING_HOURS||'').trim().toUpperCase():'';
   if(!ty)nset('STATION TYPE NOT DEFINED IN PROFILE',false);
   else if(ty==='GOODS SHED')nset('',true);
   else nset('NOT APPLICABLE ('+ty+')',false);
- }).catch(function(){nset('COULD NOT LOAD STATION PROFILE',false)});
+  wtrFree(pl,d,ty,wh);
+ }).catch(function(){nset('COULD NOT LOAD STATION PROFILE',false);wtrFreeMsg('STATION PROFILE NOT AVAILABLE')});
  bs.onclick=function(){
   if(!/^https:\/\//.test(RAKE_API)){M('INWARD_NO SHEET NOT CONNECTED',true);return}
   if(pl.ms===null){M('PLACEMENT DATE AND TIME NOT FOUND FOR THIS RAKE',true);return}
@@ -1039,7 +1079,7 @@ function showWtr(){
  sel.onchange=function(){
   var id=this.value,info=$('wtInfo');info.innerHTML='';M('');
   if(!id)return;
-  var show=function(d){var s=$('wtSel');if(tok===WTT&&s&&s.value===id){$('wtInfo').innerHTML=rakeInfo(d)+wtrPanel(d);wtrBind(d,id,M)}};
+  var show=function(d){var s=$('wtSel');if(tok===WTT&&s&&s.value===id){$('wtInfo').innerHTML=rakeInfo(d,1)+wtrPanel(d);wtrBind(d,id,M)}};
   if(cache[id]){show(cache[id]);return}
   M('LOADING RAKE...');
   fetch(RAKE_API+'?action=get&id='+encodeURIComponent(id)+'&t='+Date.now()).then(function(r){return r.json()}).then(function(k){
