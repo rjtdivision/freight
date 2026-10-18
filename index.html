@@ -323,6 +323,53 @@ main:has(.glist.pl:not([hidden])){padding:4px}
 .uid i{display:block;font-style:normal;color:#9FDCEB;font-size:10px;letter-spacing:.04em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .uid:empty{display:none}
 @media (max-width:600px){.uid i{display:none}.uid{max-width:110px}}
+/* ---- COMPACT HEADER ---- */
+header{padding:8px 14px;gap:10px}
+header .plate{padding:4px;border-radius:10px}
+header .logo{width:38px;height:38px}
+header b{font-size:14px}
+header .t{min-width:0;overflow:hidden}
+.hb,#themeBtn,#cpBtn,#outBtn{width:32px;height:32px;margin:0}
+.hb svg,#themeBtn svg{width:17px;height:17px}
+.date{flex-direction:row;align-items:center;gap:8px;padding:4px 12px;border-radius:999px;font-size:11.5px;white-space:nowrap}
+.date .d2{font-size:10px;letter-spacing:.08em;opacity:.9}
+.date .d2::before{content:"|";margin-right:8px;opacity:.6}
+.hr{flex-direction:row;align-items:center;gap:10px}
+.uid{text-align:right;max-width:200px}
+.uid b{font-size:11px}
+.uid i{font-size:9.5px}
+@media (min-width:900px){
+ #app{display:grid;grid-template-columns:220px 1fr;grid-template-rows:auto 1fr}
+ header{grid-column:1/-1;width:auto;padding:8px 20px}
+ header .logo{width:40px;height:40px}
+ nav{height:auto;width:auto}
+ main{width:auto;height:auto;min-height:0}
+}
+@media (max-width:600px){
+ header{flex-wrap:wrap;gap:6px;padding:6px 10px}
+ header .logo{width:32px;height:32px}
+ header .t{flex:1}
+ header b{font-size:clamp(12px,3.8vw,15px)}
+ .hb,#themeBtn,#cpBtn,#outBtn{width:30px;height:30px}
+ .hb svg,#themeBtn svg{width:16px;height:16px}
+ .hr{order:9;flex:0 0 100%;justify-content:space-between;gap:8px}
+ .date{padding:3px 10px;font-size:10.5px;gap:6px}
+ .date .d2{font-size:9.5px;letter-spacing:.06em}
+ .date .d2::before{margin-right:6px}
+ .uid{display:block;max-width:45%;min-width:0}
+ .uid b{font-size:10px}
+ .uid i{display:none}
+}
+/* ---- DEMURRAGE ---- */
+.hl{font-size:18px!important;font-weight:800;color:#04142F!important;background:linear-gradient(135deg,#00C2E8,#00A0C8)!important;opacity:1!important;text-align:center;border-color:transparent!important;box-shadow:0 4px 14px rgba(0,170,210,.35);cursor:help}
+.words{margin-top:8px;font-size:11px;font-weight:800;letter-spacing:.06em;line-height:1.5;color:var(--ct);text-align:center;text-transform:uppercase}
+.words:empty{display:none}
+.dtip{position:fixed;z-index:30;display:none;min-width:290px;max-width:94vw;background:var(--surface);color:var(--text);border:2px solid var(--text);border-radius:12px;overflow:hidden;box-shadow:0 14px 40px rgba(0,20,70,.45)}
+.dtip .dth{background:#222;color:#fff;text-align:center;font-weight:800;font-size:12px;letter-spacing:.06em;padding:9px 10px}
+.dtip table{width:100%;border-collapse:collapse;font-size:12px;font-weight:700;text-align:center}
+.dtip th{padding:7px 6px;font-size:10.5px;background:rgba(0,169,206,.12);border-bottom:2px solid var(--text)}
+.dtip td{padding:7px 6px;border-bottom:1px solid var(--line)}
+.dtip tr.tt td{background:rgba(0,169,206,.12);border-top:2px solid var(--text);border-bottom:0;font-weight:800}
 </style>
 </head>
 <body>
@@ -443,7 +490,7 @@ function render(s){
  var ks=Object.keys(icons);
  nav.querySelectorAll('button').forEach(function(b,i){b.classList.toggle('on',ks[i]===s.t)});
  title.textContent=s.t;show(s.t);
- if(s.s==='upload')showUpload();else if(s.s==='fh')showFreeHours();else if(s.s==='sp')showStationProfile();else if(s.s==='cc')showCommodityClass();else if(s.s==='tally')showTally();else if(s.s==='plc')showPlacement();else if(s.s==='wtr')showWtr();else if(s.s==='al'&&isAdm())showActLog();else if(s.s==='ud'&&isAdm())showUserList();
+ if(s.s==='upload')showUpload();else if(s.s==='fh')showFreeHours();else if(s.s==='sp')showStationProfile();else if(s.s==='cc')showCommodityClass();else if(s.s==='tally')showTally();else if(s.s==='plc')showPlacement();else if(s.s==='wtr')showWtr();else if(s.s==='al'&&isAdm())showActLog();else if(s.s==='ud'&&isAdm())showUserList();else if(s.s==='dr'&&isAdm())showDemRate();
  else if(s.s==='result'){if(UW.rows.length&&UW.station)processWgn(UW.station);else showUpload()}
  NP=false;updateBack();
 }
@@ -1069,6 +1116,70 @@ M('LOADING RAKES...');
  }).catch(function(e){var m=String(e&&e.message||'');sel.innerHTML='<option value="" selected disabled>NOT AVAILABLE</option>';M(m.indexOf('SRV:')===0?m.slice(4).toUpperCase().slice(0,80):'COULD NOT LOAD - CHECK INTERNET AND TRY AGAIN',true)});
 }
 var WTT=0;
+var WD=null,DR=null,WTF=null;
+var DB=[6,12,24,48,72,1e9],DL=['UPTO 6 HRS.','7 TO 12 HRS.','13 TO 24 HRS.','25 TO 48 HRS.','49 TO 72 HRS.','ABOVE 72 HRS.'];
+document.addEventListener('click',function(){dtipHide()});
+function drFetch(){
+ if(!/^https:\/\//.test(RAKE_API))return Promise.reject(new Error('SRV:INWARD_NO SHEET NOT CONNECTED'));
+ return fetch(RAKE_API+'?action=rates&t='+Date.now()).then(function(r){return r.json()}).then(function(j){
+  if(!j||!j.ok)throw new Error('SRV:'+((j&&j.error)||'failed'));
+  if(!Array.isArray(j.rates)||j.rates.length!==6)throw new Error('SRV:SCRIPT IS OUTDATED - DEPLOY THE NEW VERSION IN APPS SCRIPT');
+  return j.rates.map(Number);
+ });
+}
+function demCalc(hrs,w,r){
+ var rows=[],prev=0,tot=0,th=0;
+ for(var i=0;i<6;i++){
+  var h=Math.max(0,Math.min(hrs,DB[i])-prev);prev=DB[i];
+  var a=Math.round(h*r[i]*w*100)/100;
+  rows.push({label:DL[i],rate:r[i],hrs:h,amt:a});tot+=a;th+=h;
+ }
+ return {rows:rows,hrs:th,amt:Math.round(tot*100)/100};
+}
+function fmtRs(v){return Number(v).toLocaleString('en-IN',{minimumFractionDigits:(v%1?2:0),maximumFractionDigits:2})}
+function w99(n){
+ var a=['','ONE','TWO','THREE','FOUR','FIVE','SIX','SEVEN','EIGHT','NINE','TEN','ELEVEN','TWELVE','THIRTEEN','FOURTEEN','FIFTEEN','SIXTEEN','SEVENTEEN','EIGHTEEN','NINETEEN'],
+  t=['','','TWENTY','THIRTY','FORTY','FIFTY','SIXTY','SEVENTY','EIGHTY','NINETY'];
+ return n<20?a[n]:t[Math.floor(n/10)]+(n%10?' '+a[n%10]:'');
+}
+function rsWords(v){
+ var r=Math.floor(v),p=Math.round((v-r)*100);if(p===100){r++;p=0}
+ var s=[],n=r,c=Math.floor(n/10000000);n%=10000000;
+ var l=Math.floor(n/100000);n%=100000;var th=Math.floor(n/1000);n%=1000;var h=Math.floor(n/100);n%=100;
+ if(c)s.push(w99(c%100)+' CRORE');if(l)s.push(w99(l)+' LAKH');if(th)s.push(w99(th)+' THOUSAND');if(h)s.push(w99(h)+' HUNDRED');if(n)s.push(w99(n));
+ return 'RUPEES '+(s.length?s.join(' '):'ZERO')+(p?' AND '+w99(p)+' PAISE':'')+' ONLY';
+}
+function dtipHide(){var t=document.getElementById('dtip');if(t)t.style.display='none'}
+function dtipShow(){
+ var W=WD,da=document.getElementById('wtDa');if(!W||!W.res||!da)return;
+ var t=document.getElementById('dtip');
+ if(!t){t=document.createElement('div');t.id='dtip';t.className='dtip';document.body.appendChild(t)}
+ var R=W.res;
+ t.innerHTML='<div class=dth>SLAB WISE DEMURRAGE CALCULATION</div><table><tr><th>SLAB</th><th>RATE / WGN.</th><th>CHG. HRS</th><th>DEMM. Rs.</th></tr>'
+  +R.rows.map(function(x){return '<tr><td>'+x.label+'</td><td>'+fmtRs(x.rate)+'</td><td>'+x.hrs+'</td><td>'+fmtRs(x.amt)+'</td></tr>'}).join('')
+  +'<tr class=tt><td>TOTAL</td><td>---</td><td>'+R.hrs+'</td><td>'+fmtRs(R.amt)+'</td></tr></table>';
+ t.style.display='block';
+ var b=da.getBoundingClientRect(),tw=t.offsetWidth,th=t.offsetHeight,
+  x=Math.max(8,Math.min(b.left,innerWidth-tw-8)),y=b.bottom+6;
+ if(y+th>innerHeight-8)y=Math.max(8,b.top-th-6);
+ t.style.left=x+'px';t.style.top=y+'px';
+}
+function wtrDem(){
+ var $=function(x){return document.getElementById(x)},net=$('wtNet'),dh=$('wtDh'),da=$('wtDa'),wd=$('wtWd'),W=WD;
+ if(!net||!dh||!da||!W)return;
+ var clr=function(t){net.value=dh.value=da.value='--';W.res=null;if(wd)wd.textContent=t||''};
+ var d=W.d,pl=W.pl,rd=$('wtRd'),rt=$('wtRt'),dm=/^\d{2}\/\d{2}\/\d{4}$/,tm=/^([01]\d|2[0-3]):[0-5]\d$/;
+ var ms=(rd&&rt&&dm.test(rd.value)&&tm.test(rt.value))?wtrDT(rd.value,rt.value):null;
+ var fh=parseFloat(d.FREE_HOURS),w=parseInt(d.NO_OF_WAGONS,10);
+ if(ms===null||pl.ms===null||ms<pl.ms||isNaN(fh)||!WTF||!(w>0)){clr('');return}
+ if(DR===false){clr('DEMURRAGE RATES NOT AVAILABLE');return}
+ if(!DR){clr('LOADING DEMURRAGE RATES...');return}
+ var tot=Math.round((ms-pl.ms)/60000),nm=WTF.nightMin||0,netM=Math.max(0,tot-Math.round(fh*60)-nm),
+  h=Math.ceil(netM/60),c=demCalc(h,w,DR);
+ W.res={total:wtrHM(tot),night:wtrHM(nm),net:wtrHM(netM),hrs:h,amt:c.amt,rows:c.rows};
+ net.value=W.res.net;dh.value=h;da.value='Rs. '+fmtRs(c.amt);
+ if(wd)wd.textContent=rsWords(c.amt);
+}
 // ---- W.T.R. detention fields ----
 function wtrDT(dt,tm){
  var a=/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(String(dt||'').trim())||null,y;
@@ -1089,18 +1200,18 @@ function wtrPanel(d){
  var pl=wtrFirstPlacement(d),
   fh=(d.FREE_HOURS==null||d.FREE_HOURS==='')?'--':d.FREE_HOURS,
   v=function(l,x){return '<tr><td>'+l+'</td><td>'+esc(x===''||x==null?'--':x)+'</td></tr>'},
-  b=function(l){return '<tr><td>'+l+'</td><td><input class=gina type=text readonly aria-label="'+l+'"></td></tr>'};
+  b=function(l,id){return '<tr><td>'+l+'</td><td><input'+(id?' id='+id:'')+' class=gina type=text readonly aria-label="'+l+'"></td></tr>'};
  return '<div class=stl style="margin-top:14px">DETENTION DETAILS</div><table class=sum>'
   +v('PLACEMENT DATE',pl.date)+v('PLACEMENT TIME',pl.time)
   +'<tr><td>RELEASE DATE</td><td><div class=dwrap><input id=wtRd class=gin type=text inputmode=numeric maxlength=10 autocomplete=off placeholder="DD/MM/YYYY" aria-label="Release date" value="'+esc(d.RELEASE_DATE||'')+'"><span class=dpk><svg width=22 height=22 viewBox="0 0 24 24" fill=none stroke=currentColor stroke-width=2 stroke-linecap=round stroke-linejoin=round><rect x=3 y=5 width=18 height=16 rx=2></rect><path d="M3 10h18M8 3v4m8-4v4"></path></svg><input id=wtRp type=date max="'+tdToday()+'" aria-label="Pick release date"></span></div></td></tr>'
   +'<tr><td>RELEASE TIME (24 HRS)</td><td><input id=wtRt class=gin type=text inputmode=numeric maxlength=5 autocomplete=off placeholder="HH:MM" aria-label="Release time" value="'+esc(d.RELEASE_TIME||'')+'"></td></tr>'
   +'<tr><td>TOTAL DETENTION (HRS)</td><td id=wtDet>--</td></tr>'
   +v('FREE HRS',fh)
-  +'<tr><td><button type=button id=wtNb class=wnb disabled>NIGHT INCENTIVE</button></td><td id=wtNv>LOADING...</td></tr>'+b('NET DETENTION')+b('DEMURRAGE HRS.')+b('DEMURRAGE AMOUNT')
+  +'<tr><td><button type=button id=wtNb class=wnb disabled>NIGHT INCENTIVE</button></td><td id=wtNv>LOADING...</td></tr>'+b('NET DETENTION','wtNet')+b('DEMURRAGE HRS.','wtDh')
+  +'<tr><td>DEMURRAGE AMOUNT</td><td><input id=wtDa class="gina hl" type=text readonly value="--" aria-label="Demurrage amount" title="Hover / tap for slab wise details"><div id=wtWd class=words></div></td></tr>'
   +'</table><div class=urow style="margin-top:14px"><button type=button class="gbtn pri" id=wtSub>SUBMIT</button></div>';
 }
-var WTF=null;
-function wtrFreeMsg(m){var a=document.getElementById('wtFd'),b=document.getElementById('wtFt');if(a)a.textContent=m;if(b)b.textContent='';WTF=null}
+function wtrFreeMsg(m){var a=document.getElementById('wtFd'),b=document.getElementById('wtFt');if(a)a.textContent=m;if(b)b.textContent='';WTF=null;wtrDem()}
 // Free time upto (24 hrs working station).
 // Not a goods shed: placement date+time + free hrs.
 // Goods shed: night hours (22:00-06:00) count only 50% against the free hrs (night incentive).
@@ -1131,17 +1242,24 @@ function wtrFree(pl,d,ty,wh){
  var a=document.getElementById('wtFd'),n=document.getElementById('wtNi');
  if(a)a.textContent=p(t.getDate())+'/'+p(t.getMonth()+1)+'/'+t.getFullYear()+' '+p(t.getHours())+':'+p(t.getMinutes());
  if(n)n.value=wtrHM(r.nightMin)+' HRS';
+ wtrDem();
 }
 var WTS='';
 function wtrBind(d,rid,M){
  var $=function(x){return document.getElementById(x)},
   rd=$('wtRd'),rp=$('wtRp'),rt=$('wtRt'),det=$('wtDet'),bs=$('wtSub'),pl=wtrFirstPlacement(d),
   tm=/^([01]\d|2[0-3]):[0-5]\d$/,dm=/^\d{2}\/\d{2}\/\d{4}$/,
-  flash=function(el){el.classList.add('bad');clearTimeout(el._f);el._f=setTimeout(function(){el.classList.remove('bad')},700)},
-  calc=function(){
-   var ms=(dm.test(rd.value)&&tm.test(rt.value))?wtrDT(rd.value,rt.value):null,mn;
-   if(pl.ms!==null&&ms!==null){mn=Math.round((ms-pl.ms)/60000);det.textContent=mn<0?'--':String(Math.floor(mn/60)).padStart(2,'0')+':'+String(mn%60).padStart(2,'0')}else det.textContent='--';
-  };
+  flash=function(el){el.classList.add('bad');clearTimeout(el._f);el._f=setTimeout(function(){el.classList.remove('bad')},700)};
+ var me=WD={d:d,pl:pl,res:null};WTF=null;DR=null;dtipHide();
+ var calc=function(){
+  var ms=(dm.test(rd.value)&&tm.test(rt.value))?wtrDT(rd.value,rt.value):null,mn;
+  if(pl.ms!==null&&ms!==null){mn=Math.round((ms-pl.ms)/60000);det.textContent=mn<0?'--':String(Math.floor(mn/60)).padStart(2,'0')+':'+String(mn%60).padStart(2,'0')}else det.textContent='--';
+  wtrDem();
+ };
+ var da=$('wtDa');
+ da.onmouseenter=dtipShow;da.onmouseleave=dtipHide;da.onfocus=dtipShow;da.onblur=dtipHide;
+ da.onclick=function(e){e.stopPropagation();var t=$('dtip');if(t&&t.style.display==='block')dtipHide();else dtipShow()};
+ drFetch().then(function(r){if(WD!==me)return;DR=r;wtrDem()}).catch(function(){if(WD!==me)return;DR=false;wtrDem()});
  rd.oninput=function(){var x=this.value.replace(/[^0-9]/g,'').slice(0,8);this.value=x.slice(0,2)+(x.length>2?'/'+x.slice(2,4):'')+(x.length>4?'/'+x.slice(4):'');calc()};
  rp.onclick=function(){try{this.showPicker()}catch(e){}};
  rp.onchange=function(){var m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(this.value);if(m){rd.value=m[3]+'/'+m[2]+'/'+m[1];calc()}};
@@ -1151,12 +1269,12 @@ function wtrBind(d,rid,M){
   this.value=h.slice(0,2)+(h.length>2?':'+h.slice(2):'');this.setAttribute('data-g',this.value);calc();
  };
  rt.setAttribute('data-g',rt.value);calc();
- // night incentive is active only when the station type in Station Profile is GOODS SHED
  var nb=$('wtNb'),nv=$('wtNv'),stn=String(d.STATION_TO||'').trim().toUpperCase(),
   nset=function(t,ok){if(!nv||!document.body.contains(nv))return;WTS=ok?'GOODS SHED':'';nb.disabled=!ok;nv.innerHTML=ok?'<input id=wtNi class=gina type=text readonly aria-label="Night incentive">':esc(t)};
- nb.onclick=function(){M('NIGHT INCENTIVE LOGIC WILL BE ADDED LATER')};
+ nb.onclick=function(){M('NIGHT INCENTIVE IS ADDED TO FREE TIME AUTOMATICALLY')};
  if(!stn||!spOk()){nset('STATION TYPE NOT DEFINED IN PROFILE',false);wtrFreeMsg('STATION PROFILE NOT AVAILABLE')}
  else fetch(STATION_API+'?action=get&code='+encodeURIComponent(stn)+'&t='+Date.now()).then(function(r){return r.json()}).then(function(j){
+  if(WD!==me)return;
   if(!j||!j.ok)throw new Error('x');
   var ty=(j.found&&j.data)?String(j.data.TYPE||'').trim().toUpperCase():'',
    wh=(j.found&&j.data)?String(j.data.WORKING_HOURS||'').trim().toUpperCase():'';
@@ -1164,7 +1282,7 @@ function wtrBind(d,rid,M){
   else if(ty==='GOODS SHED')nset('',true);
   else nset('NOT APPLICABLE ('+ty+')',false);
   wtrFree(pl,d,ty,wh);
- }).catch(function(){nset('COULD NOT LOAD STATION PROFILE',false);wtrFreeMsg('STATION PROFILE NOT AVAILABLE')});
+ }).catch(function(){if(WD!==me)return;nset('COULD NOT LOAD STATION PROFILE',false);wtrFreeMsg('STATION PROFILE NOT AVAILABLE')});
  bs.onclick=function(){
   if(!/^https:\/\//.test(RAKE_API)){M('INWARD_NO SHEET NOT CONNECTED',true);return}
   if(pl.ms===null){M('PLACEMENT DATE AND TIME NOT FOUND FOR THIS RAKE',true);return}
@@ -1175,12 +1293,15 @@ function wtrBind(d,rid,M){
   var ms=wtrDT(rd.value,rt.value);
   if(ms>Date.now()){flash(rt);M('FUTURE RELEASE TIME NOT ALLOWED',true);return}
   if(ms<pl.ms){flash(rd);M('RELEASE CANNOT BE BEFORE PLACEMENT',true);return}
+  var R=me.res;
+  if(!R){M('DEMURRAGE NOT CALCULATED - WAIT FOR FREE TIME / RATES TO LOAD (CHECK STATION PROFILE AND FREE HOURS)',true);return}
   bs.disabled=true;M('SAVING...');
-  fetch(RAKE_API,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:'saveRelease',rakeId:rid,releaseDate:rd.value,releaseTime:rt.value})})
+  fetch(RAKE_API,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:'saveRelease',rakeId:rid,releaseDate:rd.value,releaseTime:rt.value,calc:{TOTAL_DETENTION:R.total,NIGHT_INCENTIVE:R.night,NET_DETENTION:R.net,DEMURRAGE_HRS:R.hrs}})})
   .then(function(r){return r.json()}).then(function(j){
    if(!j||!j.ok)throw new Error('SRV:'+((j&&j.error)||'failed'));
-   if(!j.saved)throw new Error('SRV:SCRIPT IS OUTDATED - DEPLOY THE NEW VERSION IN APPS SCRIPT');
-   d.RELEASE_DATE=rd.value;d.RELEASE_TIME=rt.value;bs.disabled=false;M('SAVED - RELEASE DATE AND TIME');
+   if(!j.saved||j.amount==null)throw new Error('SRV:SCRIPT IS OUTDATED - DEPLOY THE NEW VERSION IN APPS SCRIPT');
+   d.RELEASE_DATE=rd.value;d.RELEASE_TIME=rt.value;d.NET_DETENTION=R.net;d.DEMURRAGE_HRS=R.hrs;d.DEMURRAGE_AMOUNT=j.amount;
+   bs.disabled=false;M('SAVED - DEMURRAGE Rs. '+fmtRs(j.amount));
   }).catch(function(x){var m=String(x&&x.message||'');bs.disabled=false;M(m.indexOf('SRV:')===0?'NOT SAVED - '+m.slice(4).toUpperCase().slice(0,80):'NOT SAVED - CHECK INTERNET AND TRY AGAIN',true)});
  };
 }
@@ -1270,6 +1391,35 @@ function ccAsk(code,done){
   }).catch(function(e){m.textContent=ccErr(e);m.className='umsg err';b.disabled=false});
  };
  setTimeout(function(){try{inp.focus()}catch(e){}},50);
+}
+function showDemRate(){
+ var gl=document.getElementById('glist'),$=function(x){return document.getElementById(x)};
+ gl.classList.remove('wide');document.querySelector('main').classList.remove('top');
+ gl.innerHTML='<h3>DEMURRAGE RATE</h3><div class=gpanel><div id=drm class=umsg></div><table class=fht><tr><th>SLAB</th><th>RATE / WGN. / HR (Rs.)</th></tr>'
+  +DL.map(function(l,i){return '<tr><td>'+l+'</td><td><input class=gin type=text inputmode=decimal maxlength=8 data-i='+i+' disabled></td></tr>'}).join('')
+  +'</table><div class=urow><button type=button class="gbtn pri" id=drs disabled>SAVE</button></div></div>';
+ gl.hidden=false;document.querySelector('.card').hidden=true;
+ var M=function(t,e){var m=$('drm');if(m){m.textContent=t;m.className='umsg'+(e?' err':'')}},
+  ins=function(){return [].slice.call(document.querySelectorAll('#glist .fht input'))},orig=[];
+ var dirty=function(){var b=$('drs');if(b)b.disabled=!ins().some(function(x,i){return x.value!==String(orig[i])})};
+ if(!isAdm()){M('ADMIN ONLY',true);return}
+ M('LOADING...');
+ drFetch().then(function(r){
+  orig=r;ins().forEach(function(x,i){x.value=String(r[i]);x.disabled=false;
+   x.oninput=function(){var v=this.value.replace(/[^0-9.]/g,''),k=v.indexOf('.');if(k>-1)v=v.slice(0,k+1)+v.slice(k+1).replace(/\./g,'').slice(0,2);this.value=v;dirty()}});
+  M('CHANGE THE RATE AND PRESS SAVE');
+ }).catch(function(e){M('NOT LOADED - '+spErr(e),true)});
+ $('drs').onclick=function(){
+  var v=ins().map(function(x){return parseFloat(x.value)});
+  if(v.some(function(n){return !(n>0)})){M('ENTER A VALID RATE IN EVERY SLAB',true);return}
+  var b=this;b.disabled=true;M('SAVING...');
+  fetch(RAKE_API,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:'saveRates',email:USER&&USER.email,rates:v})})
+  .then(function(r){return r.json()}).then(function(j){
+   if(!j||!j.ok)throw new Error('SRV:'+((j&&j.error)||'failed'));
+   if(!j.saved)throw new Error('SRV:SCRIPT IS OUTDATED - DEPLOY THE NEW VERSION IN APPS SCRIPT');
+   orig=v;DR=v;M('SAVED - NEW RATES WILL APPLY TO ALL W.T.R. CALCULATIONS');
+  }).catch(function(e){M('NOT SAVED - '+spErr(e),true);b.disabled=false});
+ };
 }
 function showCommodityClass(){
  var gl=document.getElementById('glist');
@@ -1477,7 +1627,7 @@ function show(k){
  var card=document.querySelector(".card"),gl=document.getElementById("glist");
  gl.classList.remove("wide","pl");document.querySelector("main").classList.remove("top");
  if(k==="ADMIN"){
-  var ai=[['FREE HOURS','<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>','fh'],['STATION PROFILE','<path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/>','sp'],['COMMODITY CLASS','<path d="M3 7l9-4 9 4-9 4-9-4z"/><path d="M3 12l9 4 9-4"/><path d="M3 17l9 4 9-4"/>','cc'],['ACTIVITY LOG','<path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5M9 12h6M9 16h6"/>','al'],['USER DETAILS','<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14.5c2 .7 3.5 2.6 3.5 5.5"/>','ud']];
+  var ai=[['FREE HOURS','<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>','fh'],['STATION PROFILE','<path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/>','sp'],['COMMODITY CLASS','<path d="M3 7l9-4 9 4-9 4-9-4z"/><path d="M3 12l9 4 9-4"/><path d="M3 17l9 4 9-4"/>','cc'],['ACTIVITY LOG','<path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5M9 12h6M9 16h6"/>','al'],['USER DETAILS','<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14.5c2 .7 3.5 2.6 3.5 5.5"/>','ud'],['DEMURRAGE RATE','<path d="M6 3h12M6 8h12M9 8c5 0 5 7 0 7H6l8 6"/>','dr']];
   gl.innerHTML='<h3>ADMIN</h3>'+ai.map(function(i){return '<button class="gbtn" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">'+i[1]+'</svg><span>'+i[0]+'</span></button>'}).join("");
   gl.querySelectorAll(".gbtn").forEach(function(g,k){g.onclick=function(){go({t:'ADMIN',s:ai[k][2]})}});
   gl.hidden=false;card.hidden=true;return;
@@ -1708,7 +1858,7 @@ function cpOpen(){
 
 // ---- ACTIVITY LOG (client side) ----
 var _fetch=window.fetch.bind(window);
-var SUBN={fh:'FREE HOURS',sp:'STATION PROFILE',cc:'COMMODITY CLASS',al:'ACTIVITY LOG',ud:'USER DETAILS',upload:'UPLOAD WGN NO.',tally:'INWARD TALLY',plc:'PLACEMENT PARTICULARS',wtr:'W.T.R.',result:'WGN RESULT'};
+var SUBN={fh:'FREE HOURS',sp:'STATION PROFILE',cc:'COMMODITY CLASS',al:'ACTIVITY LOG',ud:'USER DETAILS',dr:'DEMURRAGE RATE',upload:'UPLOAD WGN NO.',tally:'INWARD TALLY',plc:'PLACEMENT PARTICULARS',wtr:'W.T.R.',result:'WGN RESULT'};
 function logAct(ev,detail){
  if(!AU.sess)return;
  try{_fetch(AUTH_API,{method:'POST',keepalive:true,headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:'logActivity',sess:AU.sess,ip:AU.ip,event:ev,detail:String(detail||'').slice(0,300)})}).catch(function(){})}catch(e){}
@@ -1720,6 +1870,7 @@ function logOpen(s){
 }
 function actDetail(u,b){
  var p=[];
+ if(b.rates)p.push('RATES '+b.rates.join(', '));
  if(b.rakeId)p.push('RAKE '+b.rakeId);
  if(b.origDn)p.push('DELIVERY '+b.origDn);
  if(b.data&&b.data.STATION_CODE)p.push('STATION '+b.data.STATION_CODE);
