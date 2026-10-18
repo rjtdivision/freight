@@ -1131,10 +1131,10 @@ function demCalc(hrs,w,r){
  var rows=[],prev=0,tot=0,th=0;
  for(var i=0;i<6;i++){
   var h=Math.max(0,Math.min(hrs,DB[i])-prev);prev=DB[i];
-  var a=Math.round(h*r[i]*w*100)/100;
+  var a=Math.round(h*r[i]*w);
   rows.push({label:DL[i],rate:r[i],hrs:h,amt:a});tot+=a;th+=h;
  }
- return {rows:rows,hrs:th,amt:Math.round(tot*100)/100};
+ return {rows:rows,hrs:th,amt:tot};
 }
 function fmtRs(v){return Number(v).toLocaleString('en-IN',{minimumFractionDigits:(v%1?2:0),maximumFractionDigits:2})}
 function w99(n){
@@ -1300,8 +1300,8 @@ function wtrBind(d,rid,M){
   .then(function(r){return r.json()}).then(function(j){
    if(!j||!j.ok)throw new Error('SRV:'+((j&&j.error)||'failed'));
    if(!j.saved||j.amount==null)throw new Error('SRV:SCRIPT IS OUTDATED - DEPLOY THE NEW VERSION IN APPS SCRIPT');
-   d.RELEASE_DATE=rd.value;d.RELEASE_TIME=rt.value;d.NET_DETENTION=R.net;d.DEMURRAGE_HRS=R.hrs;d.DEMURRAGE_AMOUNT=j.amount;
-   bs.disabled=false;M('SAVED - DEMURRAGE Rs. '+fmtRs(j.amount));
+   d.RELEASE_DATE=rd.value;d.RELEASE_TIME=rt.value;d.NET_DETENTION=R.net;d.DEMURRAGE_HRS=R.hrs;d.DEMURRAGE_AMOUNT=j.amount;d.STATUS='DELIVERED';
+   bs.disabled=false;M('SAVED - DEMURRAGE Rs. '+fmtRs(j.amount)+' - STATUS: DELIVERED');
   }).catch(function(x){var m=String(x&&x.message||'');bs.disabled=false;M(m.indexOf('SRV:')===0?'NOT SAVED - '+m.slice(4).toUpperCase().slice(0,80):'NOT SAVED - CHECK INTERNET AND TRY AGAIN',true)});
  };
 }
