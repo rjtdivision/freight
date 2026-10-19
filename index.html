@@ -1311,7 +1311,7 @@ function wtrBind(d,rid,M){
    if(!j||!j.ok)throw new Error('SRV:'+((j&&j.error)||'failed'));
    if(!j.saved||j.amount==null)throw new Error('SRV:SCRIPT IS OUTDATED - DEPLOY THE NEW VERSION IN APPS SCRIPT');
    d.RELEASE_DATE=rd.value;d.RELEASE_TIME=rt.value;d.NET_DETENTION=R.net;d.DEMURRAGE_HRS=R.hrs;d.DEMURRAGE_AMOUNT=j.amount;d.STATUS='RELEASED';
-   bs.disabled=false;M('SAVED - DEMURRAGE Rs. '+fmtRs(j.amount)+' - STATUS: RELEASED');sokPop('SUBMITTED SUCCESSFULLY','DEMURRAGE Rs. '+fmtRs(j.amount)+' SAVED TO GOOGLE SHEET. STATUS: RELEASED.',function(){location.reload()});
+   bs.disabled=false;M('SAVED - DEMURRAGE Rs. '+fmtRs(j.amount)+' - STATUS: RELEASED');sokPop('SUBMITTED SUCCESSFULLY','DEMURRAGE Rs. '+fmtRs(j.amount)+' SAVED TO GOOGLE SHEET. STATUS: RELEASED.',function(){var c=SF[C];if(c&&c.s==='wtr')showWtr()});
   }).catch(function(x){var m=String(x&&x.message||'');bs.disabled=false;M(m.indexOf('SRV:')===0?'NOT SAVED - '+m.slice(4).toUpperCase().slice(0,80):'NOT SAVED - CHECK INTERNET AND TRY AGAIN',true)});
  };
 }
