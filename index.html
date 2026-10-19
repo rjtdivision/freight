@@ -370,6 +370,12 @@ header .t{min-width:0;overflow:hidden}
 .dtip th{padding:7px 6px;font-size:10.5px;background:rgba(0,169,206,.12);border-bottom:2px solid var(--text)}
 .dtip td{padding:7px 6px;border-bottom:1px solid var(--line)}
 .dtip tr.tt td{background:rgba(0,169,206,.12);border-top:2px solid var(--text);border-bottom:0;font-weight:800}
+.sbtn{min-height:0!important;width:auto!important;display:inline-flex!important;padding:6px 11px!important;margin:0 4px 0 0;font-size:10.5px!important;letter-spacing:.06em!important;border-radius:8px!important}
+.gbtn.dng{background:#E5484D;color:#fff;border-color:transparent}
+.enb{display:flex;flex-direction:column;gap:8px;padding:10px;border:1px solid var(--line);border-radius:12px;text-align:left}
+.enb.rm{opacity:.4}
+#tcf .enf{display:flex;flex-direction:column;gap:10px;text-align:left}
+#tcf .enf h4{margin:6px 0 0;font-size:12px;letter-spacing:.14em;color:var(--ct)}
 </style>
 </head>
 <body>
@@ -490,7 +496,7 @@ function render(s){
  var ks=Object.keys(icons);
  nav.querySelectorAll('button').forEach(function(b,i){b.classList.toggle('on',ks[i]===s.t)});
  title.textContent=s.t;show(s.t);
- if(s.s==='upload')showUpload();else if(s.s==='fh')showFreeHours();else if(s.s==='sp')showStationProfile();else if(s.s==='cc')showCommodityClass();else if(s.s==='tally')showTally();else if(s.s==='plc')showPlacement();else if(s.s==='wtr')showWtr();else if(s.s==='al'&&isAdm())showActLog();else if(s.s==='ud'&&isAdm())showUserList();else if(s.s==='dr'&&isAdm())showDemRate();
+ if(s.s==='upload')showUpload();else if(s.s==='fh')showFreeHours();else if(s.s==='sp')showStationProfile();else if(s.s==='cc')showCommodityClass();else if(s.s==='tally')showTally();else if(s.s==='plc')showPlacement();else if(s.s==='wtr')showWtr();else if(s.s==='al'&&isAdm())showActLog();else if(s.s==='ud'&&isAdm())showUserList();else if(s.s==='dr'&&isAdm())showDemRate();else if(s.s==='en'&&isAdm())showEntries();
  else if(s.s==='result'){if(UW.rows.length&&UW.station)processWgn(UW.station);else showUpload()}
  NP=false;updateBack();
 }
@@ -1402,6 +1408,147 @@ function ccAsk(code,done){
  };
  setTimeout(function(){try{inp.focus()}catch(e){}},50);
 }
+var EN={items:[]};
+function enq(s){return esc(s).replace(/"/g,'&quot;')}
+function enKey(d){var m=/^(\d{2})\/(\d{2})\/(\d{4})$/.exec(String(d||''));return m?m[3]+m[2]+m[1]:''}
+function enInv(inv,q){
+ q=String(q||'').trim().toUpperCase();if(!q)return true;
+ var s=String(inv||'').toUpperCase();if(s.indexOf(q)>-1)return true;
+ var m=/^(\d+)-(\d+)$/.exec(s);return !!(m&&/^\d+$/.test(q)&&+q>=+m[1]&&+q<=+m[2]);
+}
+function enMatch(x,F){
+ if(F.from&&x.from!==F.from)return false;
+ if(F.to&&x.to!==F.to)return false;
+ var k=enKey(x.invd);
+ if(F.df&&(!k||k<F.df))return false;
+ if(F.dt&&(!k||k>F.dt))return false;
+ if(F.rr&&!(x.rr||[]).some(function(r){return String(r).indexOf(F.rr)>-1}))return false;
+ return enInv(x.inv,F.inv);
+}
+function enPost(b){
+ b.email=USER&&USER.email;
+ return fetch(RAKE_API,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(b)}).then(function(r){return r.json()}).then(function(j){if(!j||!j.ok)throw new Error('SRV:'+((j&&j.error)||'failed'));return j});
+}
+function enModal(html,w){
+ var o=document.getElementById('tcf');
+ if(!o){o=document.createElement('div');o.id='tcf';document.body.appendChild(o)}
+ o.innerHTML='<div class=dc role=dialog aria-modal=true style="max-width:'+(w||420)+'px">'+html+'</div>';o.hidden=false;o.onclick=null;return o;
+}
+function enClose(){var o=document.getElementById('tcf');if(o){o.hidden=true;o.innerHTML='';o.onclick=null}}
+function enDel(id,done){
+ var o=enModal('<div class=di><svg viewBox="0 0 24 24" fill=none stroke=currentColor stroke-width=2.4 stroke-linecap=round stroke-linejoin=round><path d="M12 3l10 18H2z"></path><path d="M12 10v5M12 18.2v.1"></path></svg></div><h3>DELETE ENTRY?</h3><p>THIS CANNOT BE UNDONE</p><p style="color:var(--ct);word-break:break-all">'+esc(id)+'</p><div id=edm class=umsg></div><div class=urow><button type=button class=gbtn id=edx>CANCEL</button><button type=button class="gbtn dng" id=edok>DELETE</button></div>');
+ var g=function(x){return document.getElementById(x)};
+ g('edx').onclick=enClose;
+ g('edok').onclick=function(){
+  var b=this,c=g('edx'),m=g('edm');b.disabled=c.disabled=true;m.className='umsg';m.textContent='DELETING...';
+  enPost({action:'adminDelete',rakeId:id}).then(function(){enClose();done()}).catch(function(e){m.className='umsg err';m.textContent=spErr(e);b.disabled=c.disabled=false});
+ };
+}
+function enEdit(id,status,done){
+ var o=enModal('<h3>LOADING...</h3>');
+ fetch(RAKE_API+'?action=get&id='+encodeURIComponent(id)+'&t='+Date.now()).then(function(r){return r.json()}).then(function(j){
+  if(!j||!j.ok||!j.data)throw new Error('x');
+  var d=j.data,g=function(x){return document.getElementById(x)};
+  var fi=function(k,l,mx){return '<div class=fld><div class=stl>'+l+'</div><input class=gin type=text data-f='+k+' maxlength='+(mx||40)+' value="'+enq(d[k]==null?'':d[k])+'"></div>'};
+  var ti=function(k,l,v){return '<div class=fld><div class=stl>'+l+'</div><input class=gin type=text data-t='+k+' maxlength=30 value="'+enq(v==null?'':v)+'"></div>'};
+  var sts=['PENDING','INWARD','PLACED','RELEASED'];
+  var T=(d.TALLY||[]).map(function(t,i){
+   return '<div class=enb data-cls="'+enq(t.CLASS||'')+'" data-at="'+enq(t.TALLY_AT||'')+'"><div class=stl>RR ENTRY '+(i+1)+'</div>'
+   +ti('DELIVERY_NO','DELIVERY NO.',t.DELIVERY_NO)+ti('RR_NUMBER','RR NUMBER',t.RR_NUMBER)+ti('RR_DATE','RR DATE (DD/MM/YYYY)',t.RR_DATE)
+   +ti('CHARGE_WEIGHT','CHARGE WEIGHT',t.CHARGE_WEIGHT)+ti('FREIGHT','FREIGHT',t.FREIGHT)+ti('GST','G.S.T.',t.GST)
+   +'<div class=fld><div class=stl>LOCAL / FOREIGN</div><select class=gin data-t=LOCAL_FOREIGN><option'+(t.LOCAL_FOREIGN==='FOREIGN'?'':' selected')+'>LOCAL</option><option'+(t.LOCAL_FOREIGN==='FOREIGN'?' selected':'')+'>FOREIGN</option></select></div>'
+   +'<div class=fld><div class=stl>TALLY STATUS</div><select class=gin data-t=STATUS><option value="">--</option><option'+(t.STATUS==='INWARD'?' selected':'')+'>INWARD</option></select></div>'
+   +'<button type=button class="gbtn sbtn dng" data-rm=1>REMOVE THIS RR ENTRY</button></div>'}).join('');
+  o=enModal('<form class=enf id=enForm autocomplete=off novalidate><h3 style="text-align:center">EDIT ENTRY</h3><p style="text-align:center;word-break:break-all">'+esc(id)+'</p>'
+   +fi('RAKE_TYPE','RAKE TYPE',10)+fi('WAGON_CODE','WAGON CODE',10)+fi('TYPE_OF_WAGON','TYPE OF WAGON')+fi('STATION_FROM','STATION FROM',10)+fi('STATION_TO','STATION TO',10)
+   +'<div class=fld><div class=stl>NO. OF WAGONS (LOCKED)</div><input class=gina type=text readonly value="'+enq(d.NO_OF_WAGONS==null?'':d.NO_OF_WAGONS)+'"></div>'
+   +fi('INVOICE_NO','INVOICE NO.',80)+fi('INVOICE_DATE','INVOICE DATE (DD/MM/YYYY)',10)+fi('ACTUAL_WEIGHT_TONNE','ACTUAL WEIGHT (T)',12)+fi('CONSIGNER','CONSIGNER',80)+fi('CONSIGNEE','CONSIGNEE',80)
+   +fi('COMMODITY_CODE','COMMODITY CODE')+fi('FREE_HOURS','FREE HOURS',6)+fi('TYPE_OF_LOADING','TYPE OF LOADING')
+   +'<div class=fld><div class=stl>STATUS</div><select class=gin id=enst>'+sts.map(function(s){return '<option'+(s===status?' selected':'')+'>'+s+'</option>'}).join('')+'</select></div>'
+   +'<h4>RR / TALLY ENTRIES ('+(d.TALLY||[]).length+')</h4>'+(T||'<div class=umsg>NO RR ENTRY</div>')
+   +'<div id=enm2 class=umsg></div><div class=urow><button type=button class=gbtn id=enx>CANCEL</button><button type=submit class="gbtn pri" id=ens>SAVE</button></div></form>',480);
+  o.onclick=function(e){
+   var b=e.target.closest&&e.target.closest('button[data-rm]');
+   if(b){var blk=b.closest('.enb'),on=blk.classList.toggle('rm');b.textContent=on?'UNDO REMOVE':'REMOVE THIS RR ENTRY'}
+   else if(e.target===o&&!g('ens').disabled)enClose();
+  };
+  g('enx').onclick=enClose;
+  var msg=function(t,e){var m=g('enm2');m.textContent=t;m.className='umsg'+(e?' err':'')};
+  g('enForm').onsubmit=function(ev){
+   ev.preventDefault();
+   var fields={},dmy=/^\d{2}\/\d{2}\/\d{4}$/;
+   [].forEach.call(o.querySelectorAll('[data-f]'),function(i){fields[i.getAttribute('data-f')]=i.value.trim()});
+   if(fields.INVOICE_DATE&&!dmy.test(fields.INVOICE_DATE)){msg('INVOICE DATE: USE DD/MM/YYYY',true);return}
+   if(fields.ACTUAL_WEIGHT_TONNE!==''&&isNaN(+fields.ACTUAL_WEIGHT_TONNE)){msg('WEIGHT MUST BE A NUMBER',true);return}
+   if(fields.FREE_HOURS!==''&&isNaN(+fields.FREE_HOURS)){msg('FREE HOURS MUST BE A NUMBER',true);return}
+   var tally=[],bad='';
+   [].forEach.call(o.querySelectorAll('.enb'),function(b){
+    if(b.classList.contains('rm'))return;
+    var t={CLASS:b.getAttribute('data-cls')||'',TALLY_AT:b.getAttribute('data-at')||''};
+    [].forEach.call(b.querySelectorAll('[data-t]'),function(i){t[i.getAttribute('data-t')]=i.value.trim()});
+    t.DELIVERY_NO=String(t.DELIVERY_NO).toUpperCase();
+    if(t.RR_DATE&&!dmy.test(t.RR_DATE))bad='RR DATE: USE DD/MM/YYYY';
+    ['CHARGE_WEIGHT','FREIGHT','GST'].forEach(function(k){if(t[k]!==''&&isNaN(+t[k]))bad=k.replace('_',' ')+' MUST BE A NUMBER'});
+    if(!/^(LOCAL|FOREIGN)\/[A-Z0-9-]+\/[0-9]+$/.test(t.DELIVERY_NO))bad='DELIVERY NO. FORMAT: LOCAL/1/1 OR FOREIGN/2026/1';
+    else if(t.DELIVERY_NO.split('/')[0]!==t.LOCAL_FOREIGN)bad='DELIVERY NO. MUST START WITH '+t.LOCAL_FOREIGN;
+    tally.push(t);
+   });
+   if(bad){msg(bad,true);return}
+   var b=g('ens'),c=g('enx');b.disabled=c.disabled=true;msg('SAVING...');
+   enPost({action:'adminSave',rakeId:id,fields:fields,status:g('enst').value,tally:tally}).then(function(r){enClose();done(r.summary)})
+   .catch(function(e){msg('NOT SAVED - '+spErr(e),true);b.disabled=c.disabled=false});
+  };
+ }).catch(function(){var o2=document.getElementById('tcf');if(o2&&!o2.hidden){enModal('<h3>COULD NOT LOAD</h3><p>CHECK INTERNET AND TRY AGAIN</p><div class=urow><button type=button class="gbtn pri" id=enx2>OK</button></div>');document.getElementById('enx2').onclick=enClose}});
+}
+function showEntries(){
+ var gl=document.getElementById('glist'),$=function(x){return document.getElementById(x)};
+ gl.classList.add('wide');document.querySelector('main').classList.remove('top');
+ gl.innerHTML='<h3>EDIT / DELETE ENTRIES</h3><div class=gpanel>'
+ +'<div class=alb><button type=button class=gbtn id=enft style="min-height:44px;flex:1">FILTER</button><button type=button class=gbtn id=enrf style="min-height:44px;flex:1">REFRESH</button></div>'
+ +'<div id=enfp style="display:none" class=wcw>'
+ +'<div class=rg><div class=fld><div class=stl>STATION FROM</div><select id=enfs class=gin></select></div><div class=fld><div class=stl>STATION TO</div><select id=ents class=gin></select></div></div>'
+ +'<div class=rg><div class=fld><div class=stl>INVOICE DATE FROM</div><input id=endf class=gin type=date></div><div class=fld><div class=stl>INVOICE DATE TO</div><input id=endt class=gin type=date></div></div>'
+ +'<div class=rg><div class=fld><div class=stl>RR NUMBER</div><input id=enrr class=gin type=text maxlength=20 inputmode=numeric autocomplete=off></div><div class=fld><div class=stl>INVOICE NO.</div><input id=eniv class=gin type=text maxlength=20 autocomplete=off></div></div>'
+ +'<div class=urow><button type=button class=gbtn id=encl>CLEAR</button><button type=button class="gbtn pri" id=enap>APPLY</button></div></div>'
+ +'<div id=enm class=umsg></div><div class=alc id=enc></div><div class=alw><table class=alt><thead><tr><th>#</th><th>RAKE ID</th><th>FROM</th><th>TO</th><th>INVOICE NO.</th><th>INVOICE DATE</th><th>RR NO.</th><th>WGN</th><th>STATUS</th><th>ACTION</th></tr></thead><tbody id=ent></tbody></table></div></div>';
+ gl.hidden=false;document.querySelector('.card').hidden=true;
+ var F=function(){return {from:$('enfs').value,to:$('ents').value,df:$('endf').value.replace(/-/g,''),dt:$('endt').value.replace(/-/g,''),rr:$('enrr').value.trim(),inv:$('eniv').value}};
+ var draw=function(){
+  var f=F(),n=0,h='',a=EN.items,i,x;
+  for(i=a.length-1;i>=0;i--){
+   x=a[i];if(!enMatch(x,f))continue;n++;
+   h+='<tr><td>'+n+'</td><td>'+esc(x.id)+'</td><td>'+esc(x.from)+'</td><td>'+esc(x.to)+'</td><td>'+esc(x.inv)+'</td><td class=t>'+esc(x.invd)+'</td><td>'+esc((x.rr||[]).join(', ')||'--')+'</td><td>'+esc(x.w)+'</td><td>'+esc(x.status)+'</td><td class=t><button type=button class="gbtn sbtn" data-a=e data-id="'+enq(x.id)+'">EDIT</button><button type=button class="gbtn sbtn dng" data-a=d data-id="'+enq(x.id)+'">DELETE</button></td></tr>';
+  }
+  $('ent').innerHTML=h||'<tr><td colspan=10>NO ENTRIES</td></tr>';
+  $('enc').textContent='SHOWING '+n+' OF '+a.length+' ENTRIES (LATEST FIRST)';
+ };
+ var fill=function(id,k,ph){
+  var s={},cur=$(id).value;EN.items.forEach(function(x){if(x[k])s[x[k]]=1});
+  $(id).innerHTML='<option value="">'+ph+'</option>'+Object.keys(s).sort().map(function(v){return '<option>'+esc(v)+'</option>'}).join('');$(id).value=cur;
+ };
+ var load=function(){
+  var m=$('enm');m.className='umsg';m.textContent='LOADING...';$('enrf').disabled=true;
+  fetch(RAKE_API+'?action=listAll&email='+encodeURIComponent(USER&&USER.email||'')+'&t='+Date.now()).then(function(r){return r.json()}).then(function(j){
+   if(!j||!j.ok)throw new Error('SRV:'+((j&&j.error)||'failed'));
+   if(!Array.isArray(j.items))throw new Error('SRV:SCRIPT IS OUTDATED - DEPLOY THE NEW VERSION IN APPS SCRIPT');
+   EN.items=j.items;fill('enfs','from','ALL STATIONS');fill('ents','to','ALL STATIONS');m.textContent='';draw();
+  }).catch(function(e){m.className='umsg err';m.textContent=spErr(e)}).then(function(){var b=$('enrf');if(b)b.disabled=false});
+ };
+ $('enft').onclick=function(){var p=$('enfp');p.style.display=p.style.display==='none'?'flex':'none'};
+ $('enap').onclick=draw;
+ $('encl').onclick=function(){['enfs','ents','endf','endt','enrr','eniv'].forEach(function(k){$(k).value=''});draw()};
+ $('enrf').onclick=load;
+ $('enrr').oninput=function(){this.value=this.value.replace(/[^0-9]/g,'')};
+ $('ent').onclick=function(e){
+  var b=e.target.closest&&e.target.closest('button[data-a]');if(!b)return;
+  var id=b.getAttribute('data-id'),x=null;EN.items.forEach(function(r){if(r.id===id)x=r});
+  if(!x)return;
+  var msg=function(t){var m=$('enm');if(m){m.className='umsg';m.textContent=t}};
+  if(b.getAttribute('data-a')==='e')enEdit(id,x.status,function(s){if(s)EN.items=EN.items.map(function(r){return r.id===id?s:r});if($('ent')){fill('enfs','from','ALL STATIONS');fill('ents','to','ALL STATIONS');draw();msg('SAVED - '+id)}});
+  else enDel(id,function(){EN.items=EN.items.filter(function(r){return r.id!==id});if($('ent')){draw();msg('DELETED - '+id)}});
+ };
+ load();
+}
 function showDemRate(){
  var gl=document.getElementById('glist'),$=function(x){return document.getElementById(x)};
  gl.classList.remove('wide');document.querySelector('main').classList.remove('top');
@@ -1637,7 +1784,7 @@ function show(k){
  var card=document.querySelector(".card"),gl=document.getElementById("glist");
  gl.classList.remove("wide","pl");document.querySelector("main").classList.remove("top");
  if(k==="ADMIN"){
-  var ai=[['FREE HOURS','<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>','fh'],['STATION PROFILE','<path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/>','sp'],['COMMODITY CLASS','<path d="M3 7l9-4 9 4-9 4-9-4z"/><path d="M3 12l9 4 9-4"/><path d="M3 17l9 4 9-4"/>','cc'],['ACTIVITY LOG','<path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5M9 12h6M9 16h6"/>','al'],['USER DETAILS','<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14.5c2 .7 3.5 2.6 3.5 5.5"/>','ud'],['DEMURRAGE RATE','<path d="M6 3h12M6 8h12M9 8c5 0 5 7 0 7H6l8 6"/>','dr']];
+  var ai=[['FREE HOURS','<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>','fh'],['STATION PROFILE','<path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/>','sp'],['COMMODITY CLASS','<path d="M3 7l9-4 9 4-9 4-9-4z"/><path d="M3 12l9 4 9-4"/><path d="M3 17l9 4 9-4"/>','cc'],['ACTIVITY LOG','<path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5M9 12h6M9 16h6"/>','al'],['USER DETAILS','<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14.5c2 .7 3.5 2.6 3.5 5.5"/>','ud'],['DEMURRAGE RATE','<path d="M6 3h12M6 8h12M9 8c5 0 5 7 0 7H6l8 6"/>','dr'],['EDIT / DELETE ENTRIES','<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/>','en']];
   gl.innerHTML='<h3>ADMIN</h3>'+ai.map(function(i){return '<button class="gbtn" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">'+i[1]+'</svg><span>'+i[0]+'</span></button>'}).join("");
   gl.querySelectorAll(".gbtn").forEach(function(g,k){g.onclick=function(){go({t:'ADMIN',s:ai[k][2]})}});
   gl.hidden=false;card.hidden=true;return;
@@ -1868,7 +2015,7 @@ function cpOpen(){
 
 // ---- ACTIVITY LOG (client side) ----
 var _fetch=window.fetch.bind(window);
-var SUBN={fh:'FREE HOURS',sp:'STATION PROFILE',cc:'COMMODITY CLASS',al:'ACTIVITY LOG',ud:'USER DETAILS',dr:'DEMURRAGE RATE',upload:'UPLOAD WGN NO.',tally:'INWARD TALLY',plc:'PLACEMENT PARTICULARS',wtr:'W.T.R.',result:'WGN RESULT'};
+var SUBN={fh:'FREE HOURS',sp:'STATION PROFILE',cc:'COMMODITY CLASS',al:'ACTIVITY LOG',ud:'USER DETAILS',dr:'DEMURRAGE RATE',en:'EDIT / DELETE ENTRIES',upload:'UPLOAD WGN NO.',tally:'INWARD TALLY',plc:'PLACEMENT PARTICULARS',wtr:'W.T.R.',result:'WGN RESULT'};
 function logAct(ev,detail){
  if(!AU.sess)return;
  try{_fetch(AUTH_API,{method:'POST',keepalive:true,headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:'logActivity',sess:AU.sess,ip:AU.ip,event:ev,detail:String(detail||'').slice(0,300)})}).catch(function(){})}catch(e){}
