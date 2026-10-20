@@ -376,6 +376,11 @@ header .t{min-width:0;overflow:hidden}
 .enb.rm{opacity:.4}
 #tcf .enf{display:flex;flex-direction:column;gap:10px;text-align:left}
 #tcf .enf h4{margin:6px 0 0;font-size:12px;letter-spacing:.14em;color:var(--ct)}
+.memo{display:grid;grid-template-columns:repeat(5,1fr);gap:2px;margin-top:6px;border-radius:10px;overflow:hidden;background:#0A1F4D;border-bottom:3px solid #00C2E8;box-shadow:0 6px 18px rgba(0,30,80,.25)}
+.mbtn{all:unset;box-sizing:border-box;cursor:pointer;display:flex;align-items:center;justify-content:center;text-align:center;min-height:46px;padding:6px 3px;background:#0A1F4D;color:#fff;font-weight:800;font-size:clamp(8.5px,2.6vw,11px);letter-spacing:.03em;line-height:1.25;text-transform:uppercase;-webkit-tap-highlight-color:transparent}
+.mbtn:active,.mbtn:hover{background:#0F3F82}
+.mbtn:focus-visible{outline:2px solid #00C2E8;outline-offset:-2px}
+@media (min-width:900px){.mbtn{font-size:12px;min-height:52px}}
 </style>
 </head>
 <body>
@@ -496,7 +501,7 @@ function render(s){
  var ks=Object.keys(icons);
  nav.querySelectorAll('button').forEach(function(b,i){b.classList.toggle('on',ks[i]===s.t)});
  title.textContent=s.t;show(s.t);
- if(s.s==='upload')showUpload();else if(s.s==='fh')showFreeHours();else if(s.s==='sp')showStationProfile();else if(s.s==='cc')showCommodityClass();else if(s.s==='tally')showTally();else if(s.s==='plc')showPlacement();else if(s.s==='wtr')showWtr();else if(s.s==='al'&&isAdm())showActLog();else if(s.s==='ud'&&isAdm())showUserList();else if(s.s==='dr'&&isAdm())showDemRate();else if(s.s==='en'&&isAdm())showEntries();
+ if(s.s==='upload')showUpload();else if(s.s==='fh')showFreeHours();else if(s.s==='sp')showStationProfile();else if(s.s==='cc')showCommodityClass();else if(s.s==='tally')showTally();else if(s.s==='plc')showPlacement();else if(s.s==='wtr')showWtr();else if(s.s==='db')showDelivery();else if(s.s==='al'&&isAdm())showActLog();else if(s.s==='ud'&&isAdm())showUserList();else if(s.s==='dr'&&isAdm())showDemRate();else if(s.s==='en'&&isAdm())showEntries();
  else if(s.s==='result'){if(UW.rows.length&&UW.station)processWgn(UW.station);else showUpload()}
  NP=false;updateBack();
 }
@@ -1451,7 +1456,7 @@ function enEdit(id,status,done){
   var d=j.data,g=function(x){return document.getElementById(x)};
   var fi=function(k,l,mx){return '<div class=fld><div class=stl>'+l+'</div><input class=gin type=text data-f='+k+' maxlength='+(mx||40)+' value="'+enq(d[k]==null?'':d[k])+'"></div>'};
   var ti=function(k,l,v){return '<div class=fld><div class=stl>'+l+'</div><input class=gin type=text data-t='+k+' maxlength=30 value="'+enq(v==null?'':v)+'"></div>'};
-  var sts=['PENDING','INWARD','PLACED','RELEASED'];
+  var sts=['PENDING','INWARD','PLACED','RELEASED','DELIVERED'];
   var T=(d.TALLY||[]).map(function(t,i){
    return '<div class=enb data-cls="'+enq(t.CLASS||'')+'" data-at="'+enq(t.TALLY_AT||'')+'"><div class=stl>RR ENTRY '+(i+1)+'</div>'
    +ti('DELIVERY_NO','DELIVERY NO.',t.DELIVERY_NO)+ti('RR_NUMBER','RR NUMBER',t.RR_NUMBER)+ti('RR_DATE','RR DATE (DD/MM/YYYY)',t.RR_DATE)
@@ -1463,7 +1468,7 @@ function enEdit(id,status,done){
    +fi('RAKE_TYPE','RAKE TYPE',10)+fi('WAGON_CODE','WAGON CODE',10)+fi('TYPE_OF_WAGON','TYPE OF WAGON')+fi('STATION_FROM','STATION FROM',10)+fi('STATION_TO','STATION TO',10)
    +'<div class=fld><div class=stl>NO. OF WAGONS (LOCKED)</div><input class=gina type=text readonly value="'+enq(d.NO_OF_WAGONS==null?'':d.NO_OF_WAGONS)+'"></div>'
    +fi('INVOICE_NO','INVOICE NO.',80)+fi('INVOICE_DATE','INVOICE DATE (DD/MM/YYYY)',10)+fi('ACTUAL_WEIGHT_TONNE','ACTUAL WEIGHT (T)',12)+fi('CONSIGNER','CONSIGNER',80)+fi('CONSIGNEE','CONSIGNEE',80)
-   +fi('COMMODITY_CODE','COMMODITY CODE')+fi('FREE_HOURS','FREE HOURS',6)+fi('TYPE_OF_LOADING','TYPE OF LOADING')
+   +fi('COMMODITY_CODE','COMMODITY CODE')+fi('WHARFAGE_AMOUNT','WHARFAGE AMOUNT',12)+fi('FREE_HOURS','FREE HOURS',6)+fi('TYPE_OF_LOADING','TYPE OF LOADING')
    +'<div class=fld><div class=stl>STATUS</div><select class=gin id=enst>'+sts.map(function(s){return '<option'+(s===status?' selected':'')+'>'+s+'</option>'}).join('')+'</select></div>'
    +'<h4>RR / TALLY ENTRIES ('+(d.TALLY||[]).length+')</h4>'+(T||'<div class=umsg>NO RR ENTRY</div>')
    +'<div id=enm2 class=umsg></div><div class=urow><button type=button class=gbtn id=enx>CANCEL</button><button type=submit class="gbtn pri" id=ens>SAVE</button></div></form>',480);
@@ -1548,6 +1553,70 @@ function showEntries(){
   else enDel(id,function(){EN.items=EN.items.filter(function(r){return r.id!==id});if($('ent')){draw();msg('DELETED - '+id)}});
  };
  load();
+}
+var DBT=0;
+function dbPanel(d){
+ var pl=wtrFirstPlacement(d),
+  v=function(l,x){return '<tr><td>'+l+'</td><td>'+esc(x===''||x==null?'--':x)+'</td></tr>'},
+  rr=(d.TALLY||[]).map(function(t){return esc((t.RR_NUMBER||'--')+' ('+(t.RR_DATE||'--')+') - '+(t.DELIVERY_NO||'--'))}).join('<br>')||'--',
+  amt=(d.DEMURRAGE_AMOUNT==null||d.DEMURRAGE_AMOUNT==='')?'--':'Rs. '+fmtRs(d.DEMURRAGE_AMOUNT);
+ return '<div class=stl style="margin-top:14px">RELEASE / DEMURRAGE DETAILS</div><table class=sum>'
+  +v('PLACEMENT DATE',pl.date)+v('PLACEMENT TIME',pl.time)+v('RELEASE DATE',d.RELEASE_DATE)+v('RELEASE TIME',d.RELEASE_TIME)
+  +v('TOTAL DETENTION (HH:MM)',d.TOTAL_DETENTION)+v('NIGHT INCENTIVE (HH:MM)',d.NIGHT_INCENTIVE)+v('NET DETENTION (HH:MM)',d.NET_DETENTION)
+  +v('DEMURRAGE HRS.',d.DEMURRAGE_HRS)+v('DEMURRAGE AMOUNT',amt)
+  +'<tr><td>RR / DELIVERY NO.</td><td>'+rr+'</td></tr>'
+  +'<tr><td>WHARFAGE AMOUNT (Rs.)</td><td><input id=dbW class=gin type=text inputmode=decimal maxlength=11 autocomplete=off placeholder="0" aria-label="Wharfage amount"></td></tr></table>'
+  +'<div class=urow style="margin-top:14px"><button type=button class="gbtn pri" id=dbSub>SUBMIT</button></div>';
+}
+function dbBind(d,rid,M){
+ var $=function(x){return document.getElementById(x)},w=$('dbW'),bs=$('dbSub');
+ w.oninput=function(){
+  var v=this.value.replace(/[^0-9.]/g,''),k=v.indexOf('.');
+  if(k>-1)v=v.slice(0,k+1)+v.slice(k+1).replace(/\./g,'').slice(0,2);
+  this.value=v;this.classList.remove('bad');
+ };
+ bs.onclick=function(){
+  var x=w.value.trim();
+  if(!/^\d{1,8}(\.\d{1,2})?$/.test(x)){w.classList.add('bad');M('ENTER WHARFAGE AMOUNT (NUMBERS ONLY, MAX 2 DECIMALS)',true);return}
+  if(!/^https:\/\//.test(RAKE_API)){M('INWARD_NO SHEET NOT CONNECTED',true);return}
+  var n=Number(x),t=new Date(),p=function(q){return String(q).padStart(2,'0')},
+   at=p(t.getDate())+'/'+p(t.getMonth()+1)+'/'+t.getFullYear()+' '+p(t.getHours())+':'+p(t.getMinutes())+':'+p(t.getSeconds());
+  bs.disabled=true;M('SAVING...');
+  fetch(RAKE_API,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:'saveDelivery',rakeId:rid,wharfage:n,deliveredAt:at})})
+  .then(function(r){return r.json()}).then(function(j){
+   if(!j||!j.ok)throw new Error('SRV:'+((j&&j.error)||'failed'));
+   if(!j.saved)throw new Error('SRV:SCRIPT IS OUTDATED - DEPLOY THE NEW VERSION IN APPS SCRIPT');
+   bs.disabled=false;M('');
+   sokPop('SUBMITTED SUCCESSFULLY','WHARFAGE Rs. '+fmtRs(n)+' SAVED TO GOOGLE SHEET. STATUS: DELIVERED.',function(){var c=SF[C];if(c&&c.s==='db')showDelivery()});
+  }).catch(function(e){var m=String(e&&e.message||'');bs.disabled=false;M(m.indexOf('SRV:')===0?'NOT SAVED - '+m.slice(4).toUpperCase().slice(0,80):'NOT SAVED - CHECK INTERNET AND TRY AGAIN',true)});
+ };
+}
+function showDelivery(){
+ var gl=document.getElementById('glist'),$=function(x){return document.getElementById(x)},tok=++DBT,cache={};
+ gl.classList.remove('wide','pl');document.querySelector('main').classList.remove('top');
+ gl.innerHTML='<h3>DELIVERY BOOK</h3><div class=gpanel><div class=stl>SELECT RAKE ID</div><select id=dbSel class=gin disabled><option value="" selected disabled>LOADING...</option></select><div id=dbm class=umsg></div><div id=dbInfo class=wcw></div></div>';
+ gl.hidden=false;document.querySelector('.card').hidden=true;
+ var M=function(t,e){var m=$('dbm');if(m&&tok===DBT){m.textContent=t;m.className='umsg'+(e?' err':'')}};
+ var sel=$('dbSel');
+ if(!/^https:\/\//.test(RAKE_API)){sel.innerHTML='<option value="" selected disabled>NOT AVAILABLE</option>';M('INWARD_NO SHEET NOT CONNECTED',true);return}
+ sel.onchange=function(){
+  var id=this.value,info=$('dbInfo');info.innerHTML='';M('');
+  if(!id)return;
+  var show=function(d){var s=$('dbSel');if(tok===DBT&&s&&s.value===id){$('dbInfo').innerHTML=rakeInfo(d)+dbPanel(d);dbBind(d,id,M)}};
+  M('LOADING RAKE...');
+  fetch(RAKE_API+'?action=get&id='+encodeURIComponent(id)+'&t='+Date.now()).then(function(r){return r.json()}).then(function(k){
+   if(!k||!k.ok||!k.data)throw new Error('x');
+   var s=$('dbSel');if(tok===DBT&&s&&s.value===id){M('');show(k.data)}
+  }).catch(function(){var s=$('dbSel');if(tok===DBT&&s&&s.value===id)M('COULD NOT LOAD RAKE - TRY AGAIN',true)});
+ };
+ fetch(RAKE_API+'?action=list&status=RELEASED&t='+Date.now()).then(function(r){return r.json()}).then(function(j){
+  if(!j||!j.ok)throw new Error('SRV:'+((j&&j.error)||'failed'));
+  if(!Array.isArray(j.ids)||j.filtered!==true)throw new Error('SRV:SCRIPT IS OUTDATED - DEPLOY THE NEW VERSION IN APPS SCRIPT');
+  var ids=j.ids.slice().reverse(),s=$('dbSel');if(tok!==DBT||!s)return;
+  if(!ids.length){s.innerHTML='<option value="" selected disabled>NO RELEASED RAKE</option>';return}
+  s.innerHTML='<option value="" selected disabled>SELECT RAKE ID</option>'+ids.map(function(x){return '<option>'+esc(x)+'</option>'}).join('');
+  s.disabled=false;
+ }).catch(function(e){var m=String(e&&e.message||'');sel.innerHTML='<option value="" selected disabled>NOT AVAILABLE</option>';M(m.indexOf('SRV:')===0?m.slice(4).toUpperCase().slice(0,80):'COULD NOT LOAD - CHECK INTERNET AND TRY AGAIN',true)});
 }
 function showDemRate(){
  var gl=document.getElementById('glist'),$=function(x){return document.getElementById(x)};
@@ -1791,7 +1860,8 @@ function show(k){
  }
  if(k==="INWARD"){
   gl.innerHTML='<h3>INWARD</h3>'+inwardItems.map(function(i){return '<button class="gbtn" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="'+i[1]+'"/></svg><span>'+i[0]+'</span></button>'}).join("");
-  gl.querySelectorAll(".gbtn").forEach(function(g,i){g.onclick=i===0?function(){go({t:'INWARD',s:'upload'})}:i===1?function(){go({t:'INWARD',s:'tally'})}:i===2?function(){go({t:'INWARD',s:'plc'})}:i===3?function(){go({t:'INWARD',s:'wtr'})}:toast});
+  gl.querySelectorAll(".gbtn").forEach(function(g,i){g.onclick=i===0?function(){go({t:'INWARD',s:'upload'})}:i===1?function(){go({t:'INWARD',s:'tally'})}:i===2?function(){go({t:'INWARD',s:'plc'})}:i===3?function(){go({t:'INWARD',s:'wtr'})}:i===4?function(){go({t:'INWARD',s:'db'})}:toast});
+  gl.insertAdjacentHTML('beforeend','<div class="memo">'+['WAGON NO. PRINT','PLACEMENT MEMO','DEMMURAGE BILL','RELEASE MEMO','SHUNTING CHARGE MEMO'].map(function(t){return '<button type="button" class="mbtn">'+t+'</button>'}).join('')+'</div>');gl.querySelectorAll('.mbtn').forEach(function(b){b.onclick=toast});
   gl.hidden=false;card.hidden=true;
  }else{gl.hidden=true;card.hidden=false}
 }
@@ -2015,7 +2085,7 @@ function cpOpen(){
 
 // ---- ACTIVITY LOG (client side) ----
 var _fetch=window.fetch.bind(window);
-var SUBN={fh:'FREE HOURS',sp:'STATION PROFILE',cc:'COMMODITY CLASS',al:'ACTIVITY LOG',ud:'USER DETAILS',dr:'DEMURRAGE RATE',en:'EDIT / DELETE ENTRIES',upload:'UPLOAD WGN NO.',tally:'INWARD TALLY',plc:'PLACEMENT PARTICULARS',wtr:'W.T.R.',result:'WGN RESULT'};
+var SUBN={fh:'FREE HOURS',sp:'STATION PROFILE',cc:'COMMODITY CLASS',al:'ACTIVITY LOG',ud:'USER DETAILS',dr:'DEMURRAGE RATE',db:'DELIVERY BOOK',en:'EDIT / DELETE ENTRIES',upload:'UPLOAD WGN NO.',tally:'INWARD TALLY',plc:'PLACEMENT PARTICULARS',wtr:'W.T.R.',result:'WGN RESULT'};
 function logAct(ev,detail){
  if(!AU.sess)return;
  try{_fetch(AUTH_API,{method:'POST',keepalive:true,headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:'logActivity',sess:AU.sess,ip:AU.ip,event:ev,detail:String(detail||'').slice(0,300)})}).catch(function(){})}catch(e){}
@@ -2027,6 +2097,7 @@ function logOpen(s){
 }
 function actDetail(u,b){
  var p=[];
+ if(b.wharfage!=null)p.push('WHARFAGE '+b.wharfage);
  if(b.rates)p.push('RATES '+b.rates.join(', '));
  if(b.rakeId)p.push('RAKE '+b.rakeId);
  if(b.origDn)p.push('DELIVERY '+b.origDn);
