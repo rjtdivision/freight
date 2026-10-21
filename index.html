@@ -1851,6 +1851,7 @@ function showStationProfile(){
  };
 }
 function toast(){var t=document.getElementById("toast");t.classList.add("on");clearTimeout(toast.t);toast.t=setTimeout(function(){t.classList.remove("on")},1500)}
+function memoBar(){return '<div class="memo">'+[['WAGON NO. PRINT','<path d="M6 9V3h12v6M6 18H4a1 1 0 0 1-1-1v-6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v6a1 1 0 0 1-1 1h-2"/><path d="M6 14h12v7H6z"/>'],['PLACEMENT MEMO','<rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4h6v3H9zM9 12h6M9 16h4"/>'],['DEMMURAGE BILL','<path d="M5 3h14v18l-3-2-2 2-2-2-2 2-2-2-3 2z"/><path d="M9 8h6M9 12h6"/>'],['RELEASE MEMO','<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 7.5-2"/>'],['SHUNTING CHARGE MEMO','<path d="M4 8h14m0 0l-4-4m4 4l-4 4M20 16H6m0 0l4-4m-4 4l4 4"/>']].map(function(t){return '<button type="button" class="mbtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">'+t[1]+'</svg><span>'+t[0]+'</span></button>'}).join('')+'</div>'}
 function show(k){
  var card=document.querySelector(".card"),gl=document.getElementById("glist");
  gl.classList.remove("wide","pl");document.querySelector("main").classList.remove("top");
@@ -1860,10 +1861,17 @@ function show(k){
   gl.querySelectorAll(".gbtn").forEach(function(g,k){g.onclick=function(){go({t:'ADMIN',s:ai[k][2]})}});
   gl.hidden=false;card.hidden=true;return;
  }
+ if(k==="OUTWARD"){
+  var outItems=inwardItems.slice(0,4).map(function(i,n){return n===1?['OUTWARD TALLY',i[1]]:i});
+  gl.innerHTML='<h3>OUTWARD</h3>'+outItems.map(function(i){return '<button class="gbtn" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="'+i[1]+'"/></svg><span>'+i[0]+'</span></button>'}).join("");
+  gl.querySelectorAll(".gbtn").forEach(function(g){g.onclick=toast});
+  gl.insertAdjacentHTML('beforeend',memoBar());gl.querySelectorAll('.mbtn').forEach(function(b){b.onclick=toast});
+  gl.hidden=false;card.hidden=true;return;
+ }
  if(k==="INWARD"){
   gl.innerHTML='<h3>INWARD</h3>'+inwardItems.map(function(i){return '<button class="gbtn" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="'+i[1]+'"/></svg><span>'+i[0]+'</span></button>'}).join("");
   gl.querySelectorAll(".gbtn").forEach(function(g,i){g.onclick=i===0?function(){go({t:'INWARD',s:'upload'})}:i===1?function(){go({t:'INWARD',s:'tally'})}:i===2?function(){go({t:'INWARD',s:'plc'})}:i===3?function(){go({t:'INWARD',s:'wtr'})}:i===4?function(){go({t:'INWARD',s:'db'})}:toast});
-  gl.insertAdjacentHTML('beforeend','<div class="memo">'+[['WAGON NO. PRINT','<path d="M6 9V3h12v6M6 18H4a1 1 0 0 1-1-1v-6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v6a1 1 0 0 1-1 1h-2"/><path d="M6 14h12v7H6z"/>'],['PLACEMENT MEMO','<rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4h6v3H9zM9 12h6M9 16h4"/>'],['DEMMURAGE BILL','<path d="M5 3h14v18l-3-2-2 2-2-2-2 2-2-2-3 2z"/><path d="M9 8h6M9 12h6"/>'],['RELEASE MEMO','<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 7.5-2"/>'],['SHUNTING CHARGE MEMO','<path d="M4 8h14m0 0l-4-4m4 4l-4 4M20 16H6m0 0l4-4m-4 4l4 4"/>']].map(function(t){return '<button type="button" class="mbtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">'+t[1]+'</svg><span>'+t[0]+'</span></button>'}).join('')+'</div>');gl.querySelectorAll('.mbtn').forEach(function(b){b.onclick=toast});
+  gl.insertAdjacentHTML('beforeend',memoBar());gl.querySelectorAll('.mbtn').forEach(function(b){b.onclick=toast});
   gl.hidden=false;card.hidden=true;
  }else{gl.hidden=true;card.hidden=false}
 }
