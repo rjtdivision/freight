@@ -503,7 +503,7 @@ function render(s){
  var ks=Object.keys(icons);
  nav.querySelectorAll('button').forEach(function(b,i){b.classList.toggle('on',ks[i]===s.t)});
  title.textContent=s.t;show(s.t);
- if(s.s==='upload')showUpload();else if(s.s==='fh')showFreeHours();else if(s.s==='sp')showStationProfile();else if(s.s==='cc')showCommodityClass();else if(s.s==='tally')showTally();else if(s.s==='plc')showPlacement();else if(s.s==='wtr')showWtr();else if(s.s==='db')showDelivery();else if(s.s==='al'&&isAdm())showActLog();else if(s.s==='ud'&&isAdm())showUserList();else if(s.s==='dr'&&isAdm())showDemRate();else if(s.s==='en'&&isAdm())showEntries();
+ if(s.s==='upload')showUpload();else if(s.s==='fh')showFreeHours();else if(s.s==='sp')showStationProfile();else if(s.s==='cc')showCommodityClass();else if(s.s==='tally')showTally();else if(s.s==='plc')showPlacement();else if(s.s==='wtr')showWtr();else if(s.s==='db')showDelivery();else if(s.t==='INWARD'&&/^m[0-4]$/.test(s.s))showMemo(+s.s.slice(1));else if(s.s==='al'&&isAdm())showActLog();else if(s.s==='ud'&&isAdm())showUserList();else if(s.s==='dr'&&isAdm())showDemRate();else if(s.s==='en'&&isAdm())showEntries();
  else if(s.s==='result'){if(UW.rows.length&&UW.station)processWgn(UW.station);else showUpload()}
  NP=false;updateBack();
 }
@@ -1620,6 +1620,33 @@ function showDelivery(){
   s.disabled=false;
  }).catch(function(e){var m=String(e&&e.message||'');sel.innerHTML='<option value="" selected disabled>NOT AVAILABLE</option>';M(m.indexOf('SRV:')===0?m.slice(4).toUpperCase().slice(0,80):'COULD NOT LOAD - CHECK INTERNET AND TRY AGAIN',true)});
 }
+var MEMOT=['WAGON NO. PRINT','PLACEMENT MEMO','DEMMURAGE BILL','RELEASE MEMO','SHUNTING CHARGE MEMO'],MMT=0;
+function showMemo(n){
+ var gl=document.getElementById('glist'),$=function(x){return document.getElementById(x)},tok=++MMT;
+ gl.classList.add('wide');document.querySelector('main').classList.remove('top');
+ gl.innerHTML='<h3>'+esc(MEMOT[n]||'')+'</h3><div class=gpanel><div class=alb><button type=button class=gbtn id=mmr style="min-height:44px;flex:1">REFRESH</button></div><div id=mmm class=umsg></div><div class=alc id=mmc></div><div class=alw><table class=alt><thead><tr><th>#</th><th>ENTRY DATE</th><th>RAKE ID</th><th>FROM</th><th>TO</th><th>INVOICE NO.</th><th>INVOICE DATE</th><th>WGN</th><th>STATUS</th><th>ACTION</th></tr></thead><tbody id=mmt></tbody></table></div></div>';
+ gl.hidden=false;document.querySelector('.card').hidden=true;
+ var M=function(t,e){var m=$('mmm');if(m&&tok===MMT){m.textContent=t;m.className='umsg'+(e?' err':'')}};
+ var load=function(){
+  if(!/^https:\/\//.test(RAKE_API)){M('INWARD_NO SHEET NOT CONNECTED',true);return}
+  M('LOADING...');$('mmr').disabled=true;
+  var st=isAdm()?'':String(USER&&USER.station||'');
+  fetch(RAKE_API+'?action=recent&limit=30&station='+encodeURIComponent(st)+'&t='+Date.now()).then(function(r){return r.json()}).then(function(j){
+   if(tok!==MMT||!$('mmt'))return;
+   if(!j||!j.ok)throw new Error('SRV:'+((j&&j.error)||'failed'));
+   if(!Array.isArray(j.items))throw new Error('SRV:SCRIPT IS OUTDATED - DEPLOY THE NEW VERSION IN APPS SCRIPT');
+   var h='';
+   j.items.forEach(function(x,i){
+    h+='<tr><td>'+(i+1)+'</td><td class=t>'+esc(String(x.at||'').slice(0,10)||'--')+'</td><td>'+esc(x.id)+'</td><td>'+esc(x.from)+'</td><td>'+esc(x.to)+'</td><td>'+esc(x.inv)+'</td><td class=t>'+esc(x.invd)+'</td><td>'+esc(x.w)+'</td><td>'+esc(x.status)+'</td><td class=t><button type=button class="gbtn sbtn">GENERATE</button></td></tr>';
+   });
+   $('mmt').innerHTML=h||'<tr><td colspan=10>NO ENTRIES</td></tr>';
+   $('mmc').textContent='LATEST '+j.items.length+' OF '+j.total+' ENTRIES (LATEST DATE FIRST)';M('');
+  }).catch(function(e){M(spErr(e),true)}).then(function(){var b=$('mmr');if(b)b.disabled=false});
+ };
+ $('mmr').onclick=load;
+ $('mmt').onclick=function(e){if(e.target.closest&&e.target.closest('button'))toast()};
+ load();
+}
 function showDemRate(){
  var gl=document.getElementById('glist'),$=function(x){return document.getElementById(x)};
  gl.classList.remove('wide');document.querySelector('main').classList.remove('top');
@@ -1871,7 +1898,7 @@ function show(k){
  if(k==="INWARD"){
   gl.innerHTML='<h3>INWARD</h3>'+inwardItems.map(function(i){return '<button class="gbtn" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="'+i[1]+'"/></svg><span>'+i[0]+'</span></button>'}).join("");
   gl.querySelectorAll(".gbtn").forEach(function(g,i){g.onclick=i===0?function(){go({t:'INWARD',s:'upload'})}:i===1?function(){go({t:'INWARD',s:'tally'})}:i===2?function(){go({t:'INWARD',s:'plc'})}:i===3?function(){go({t:'INWARD',s:'wtr'})}:i===4?function(){go({t:'INWARD',s:'db'})}:toast});
-  gl.insertAdjacentHTML('beforeend',memoBar());gl.querySelectorAll('.mbtn').forEach(function(b){b.onclick=toast});
+  gl.insertAdjacentHTML('beforeend',memoBar());gl.querySelectorAll('.mbtn').forEach(function(b,i){b.onclick=function(){go({t:'INWARD',s:'m'+i})}});
   gl.hidden=false;card.hidden=true;
  }else{gl.hidden=true;card.hidden=false}
 }
@@ -2095,7 +2122,7 @@ function cpOpen(){
 
 // ---- ACTIVITY LOG (client side) ----
 var _fetch=window.fetch.bind(window);
-var SUBN={fh:'FREE HOURS',sp:'STATION PROFILE',cc:'COMMODITY CLASS',al:'ACTIVITY LOG',ud:'USER DETAILS',dr:'DEMURRAGE RATE',db:'DELIVERY BOOK',en:'EDIT / DELETE ENTRIES',upload:'UPLOAD WGN NO.',tally:'INWARD TALLY',plc:'PLACEMENT PARTICULARS',wtr:'W.T.R.',result:'WGN RESULT'};
+var SUBN={fh:'FREE HOURS',sp:'STATION PROFILE',cc:'COMMODITY CLASS',al:'ACTIVITY LOG',ud:'USER DETAILS',dr:'DEMURRAGE RATE',db:'DELIVERY BOOK',m0:'WAGON NO. PRINT',m1:'PLACEMENT MEMO',m2:'DEMMURAGE BILL',m3:'RELEASE MEMO',m4:'SHUNTING CHARGE MEMO',en:'EDIT / DELETE ENTRIES',upload:'UPLOAD WGN NO.',tally:'INWARD TALLY',plc:'PLACEMENT PARTICULARS',wtr:'W.T.R.',result:'WGN RESULT'};
 function logAct(ev,detail){
  if(!AU.sess)return;
  try{_fetch(AUTH_API,{method:'POST',keepalive:true,headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:'logActivity',sess:AU.sess,ip:AU.ip,event:ev,detail:String(detail||'').slice(0,300)})}).catch(function(){})}catch(e){}
