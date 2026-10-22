@@ -383,6 +383,25 @@ header .t{min-width:0;overflow:hidden}
 .mbtn:active{transform:scale(.96)}
 .mbtn:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
 @media (min-width:601px){.mbtn{flex:1 1 0;min-width:0}}
+.mcards{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
+.mcard{border-radius:14px;overflow:hidden;border:1px solid var(--line);background:var(--surface);box-shadow:0 6px 18px rgba(0,40,100,.14);cursor:pointer;min-width:0}
+.mcard:active{transform:scale(.985)}
+.mh{display:flex;align-items:center;gap:10px;padding:9px 12px;background:linear-gradient(135deg,#0A1F4D,#0F3F82);color:#fff;border-bottom:3px solid #00C2E8}
+.mn{width:24px;height:24px;border-radius:50%;background:#00C2E8;color:#04122E;font-size:11px;font-weight:800;display:grid;place-items:center;flex:none}
+.mr{flex:1;min-width:0;display:flex;align-items:center;gap:8px;font-size:15px;font-weight:800;letter-spacing:.06em;overflow:hidden;white-space:nowrap}
+.mr i{font-style:normal;color:#7FE3F7}
+.mw{flex:none;text-align:center;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.3);border-radius:10px;padding:3px 9px;font-size:14px;font-weight:800;line-height:1.1}
+.mw small{display:block;font-size:7.5px;letter-spacing:.12em;color:#9FDCEB}
+.mg{display:grid;grid-template-columns:1fr 1fr 1fr;border-bottom:1px solid var(--line)}
+.mg>div{padding:8px 10px;border-right:1px solid var(--line);min-width:0}
+.mg>div:last-child{border-right:0}
+.mg b,.ml b{display:block;color:var(--muted);font-size:8.5px;letter-spacing:.1em;line-height:1.2}
+.mg span{display:block;margin-top:3px;font-size:12px;font-weight:700;line-height:1.35;overflow-wrap:anywhere}
+.ml{display:grid;grid-template-columns:78px 1fr;gap:8px;padding:7px 12px;border-bottom:1px solid var(--line);align-items:start}
+.ml:last-child{border-bottom:0}
+.ml b{padding-top:2px}
+.ml span{font-size:12px;font-weight:700;line-height:1.35;overflow-wrap:anywhere}
+.ml.cm span{color:var(--ct)}
 </style>
 </head>
 <body>
@@ -776,16 +795,29 @@ function dnErr(v,t){
  if(v!==TL.orig&&TL.dn&&TL.dn.used&&TL.dn.used.indexOf(v)>-1)return 'DELIVERY NO. ALREADY EXISTS';
  return '';
 }
+function rrParse(v){
+ v=String(v||'').trim();var m=/^(\d{1,15})(?:-(\d{1,15}))?$/.exec(v);
+ if(!m)return {err:'RR NUMBER: USE 320450451 OR RANGE 320450451-454'};
+ if(m[2]===undefined)return {a:m[1],b:m[1],n:1};
+ var a=m[1],e=m[2].length<a.length?a.slice(0,a.length-m[2].length)+m[2]:m[2],d=Number(e)-Number(a);
+ if(!(d>0))return {err:'RR RANGE: END MUST BE GREATER THAN START'};
+ if(d>199)return {err:'RR RANGE TOO LARGE (MAX 200 RR)'};
+ return {a:a,b:e,n:d+1};
+}
+function rrHas(r,q){
+ if(String(r).indexOf(q)>-1)return true;
+ var p=rrParse(r);return !!(!p.err&&p.n>1&&/^\d{1,15}$/.test(q)&&Number(q)>=Number(p.a)&&Number(q)<=Number(p.b));
+}
 function tList(){
  var el=document.getElementById('tlist');if(!el)return;
  var a=(TL.rake&&TL.rake.TALLY)||[];
  if(!a.length){el.innerHTML='';return}
  el.innerHTML='<div class=stl>SAVED ENTRIES ('+a.length+')</div>'+a.map(function(e,i){
-  return '<div class=tle><div><b>'+esc(e.DELIVERY_NO||'--')+'</b><span>RR '+esc(e.RR_NUMBER||'--')+' | '+esc(e.RR_DATE||'--')+' | '+esc(e.STATUS||'PENDING')+'</span></div><button type=button class=gbtn data-i="'+i+'">LOAD</button></div>'}).join('');
+  return '<div class=tle><div><b>'+esc(e.DELIVERY_NO||'--')+'</b><span>RR '+esc(e.RR_NUMBER||'--')+(rrParse(e.RR_NUMBER).n>1?' ['+rrParse(e.RR_NUMBER).n+' RR]':'')+' | '+esc(e.RR_DATE||'--')+' | '+esc(e.STATUS||'PENDING')+'</span></div><button type=button class=gbtn data-i="'+i+'">LOAD</button></div>'}).join('');
  el.onclick=function(ev){var b=ev.target.closest&&ev.target.closest('button[data-i]');if(b&&TL.fill)TL.fill(a[+b.getAttribute('data-i')])};
 }
 function tallyForm(){
- return '<div class=fld><div class=stl>RR NUMBER</div><input id=rrn class=gin type=text inputmode=numeric maxlength=20 placeholder="DIGITS ONLY"></div>'
+ return '<div class=fld><div class=stl>RR NUMBER</div><input id=rrn class=gin type=text maxlength=31 placeholder="E.G. 320450451 OR 320450451-454"></div>'
  +'<div class=fld><div class=stl>RR DATE</div><div class=dwrap><input id=rrd class=gin type=text inputmode=numeric maxlength=10 placeholder="DD/MM/YYYY"><span class=dpk><svg width=22 height=22 viewBox="0 0 24 24" fill=none stroke=currentColor stroke-width=2 stroke-linecap=round stroke-linejoin=round><rect x=3 y=5 width=18 height=16 rx=2></rect><path d="M3 10h18M8 3v4m8-4v4"></path></svg><input id=rrp type=date max="'+tdToday()+'" aria-label="Pick RR date"></span></div></div>'
  +'<div class=fld><div class=stl>CHARGE WEIGHT (CWT)</div><input id=cwt class=gin type=text inputmode=decimal maxlength=10 placeholder="0.0"></div>'
  +'<div class=fld><div class=stl>FREIGHT (EXCL. G.S.T.)</div><input id=frt class=gin type=text inputmode=numeric maxlength=10 placeholder="0"></div>'
@@ -824,7 +856,7 @@ function bindTally(){
   if(!dnCustom)$('dno').value=nextNo(lf);
   $('lastno').textContent='LAST '+lf+(stn?' ('+stn+')':'')+' DELIVERY NO.: '+lastNo(lf);
   $('dnerr').textContent=dnErr($('dno').value.trim(),lf);
-  var ok=$('rrn').value.trim()!==''&&!vDate(rrd.value.trim())&&/^\d+(\.\d)?$/.test($('cwt').value.trim())&&$('frt').value!==''&&$('gst').value!=='';
+  var ok=!rrParse($('rrn').value).err&&!vDate(rrd.value.trim())&&/^\d+(\.\d)?$/.test($('cwt').value.trim())&&$('frt').value!==''&&$('gst').value!=='';
   $('sts').value=ok?'INWARD':'';
  };
  var setAuto=function(){dnCustom=false;$('dno').readOnly=true;$('dedit').classList.remove('on')};
@@ -840,7 +872,7 @@ function bindTally(){
   var l=document.querySelector('input[name=lf][value=LOCAL]');if(l)l.checked=true;
   setAuto();upd();
  };
- $('rrn').oninput=function(){this.value=this.value.replace(/[^0-9]/g,'')};
+ $('rrn').oninput=function(){var v=this.value.replace(/[^0-9-]/g,''),i=v.indexOf('-');if(i===0){v=v.slice(1);i=v.indexOf('-')}if(i>-1)v=v.slice(0,i+1)+v.slice(i+1).replace(/-/g,'');this.value=v;upd()};
  rrd.oninput=function(){var d=this.value.replace(/[^0-9]/g,'').slice(0,8);this.value=d.slice(0,2)+(d.length>2?'/'+d.slice(2,4):'')+(d.length>4?'/'+d.slice(4):'')};
  rrp.onclick=function(){try{this.showPicker()}catch(e){}};
  rrp.onchange=function(){var m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(this.value);if(m){rrd.value=m[3]+'/'+m[2]+'/'+m[1];upd()}};
@@ -858,6 +890,7 @@ function bindTally(){
   var rn=$('rrn').value.trim(),dt=rrd.value.trim(),cw=$('cwt').value.trim(),fr=$('frt').value.trim(),gs=$('gst').value.trim();
   if(!rn&&!dt&&!cw&&fr===''&&gs===''){msg('ENTER AT LEAST ONE DETAIL',true);return}
   var de=dt?vDate(dt):'';if(de){msg(de,true);return}
+  if(rn){var pr=rrParse(rn);if(pr.err){msg(pr.err,true);return}}
   if(cw&&!/^\d+(\.\d)?$/.test(cw)){msg('CHARGE WEIGHT: MAX 1 DECIMAL',true);return}
   var lf0=lfv(),dn=$('dno').value.trim().toUpperCase(),dne=dnErr(dn,lf0);
   if(dne){msg(dne,true);return}
@@ -1429,7 +1462,7 @@ function enMatch(x,F){
  var k=enKey(x.invd);
  if(F.df&&(!k||k<F.df))return false;
  if(F.dt&&(!k||k>F.dt))return false;
- if(F.rr&&!(x.rr||[]).some(function(r){return String(r).indexOf(F.rr)>-1}))return false;
+ if(F.rr&&!(x.rr||[]).some(function(r){return rrHas(r,F.rr)}))return false;
  return enInv(x.inv,F.inv);
 }
 function enPost(b){
@@ -1623,10 +1656,19 @@ function showDelivery(){
 var MEMOT=['WAGON NO. PRINT','PLACEMENT MEMO','DEMMURAGE BILL','RELEASE MEMO','SHUNTING CHARGE MEMO'],MMT=0;
 function showMemo(n){
  var gl=document.getElementById('glist'),$=function(x){return document.getElementById(x)},tok=++MMT;
- gl.classList.add('wide');document.querySelector('main').classList.remove('top');
- gl.innerHTML='<h3>'+esc(MEMOT[n]||'')+'</h3><div class=gpanel><div class=alb><button type=button class=gbtn id=mmr style="min-height:44px;flex:1">REFRESH</button></div><div id=mmm class=umsg></div><div class=alc id=mmc></div><div class=alw><table class=alt><thead><tr><th>#</th><th>ENTRY DATE</th><th>RAKE ID</th><th>FROM</th><th>TO</th><th>INVOICE NO.</th><th>INVOICE DATE</th><th>WGN</th><th>STATUS</th><th>ACTION</th></tr></thead><tbody id=mmt></tbody></table></div></div>';
+ gl.classList.add('wide','pl');document.querySelector('main').classList.remove('top');
+ gl.innerHTML='<h3>'+esc(MEMOT[n]||'')+'</h3><div class=gpanel><div class=alb><button type=button class=gbtn id=mmr style="min-height:44px;flex:1">REFRESH</button></div><div id=mmm class=umsg></div><div class=alc id=mmc></div><div class=mcards id=mmt></div></div>';
  gl.hidden=false;document.querySelector('.card').hidden=true;
  var M=function(t,e){var m=$('mmm');if(m&&tok===MMT){m.textContent=t;m.className='umsg'+(e?' err':'')}};
+ var q=function(v){return v===''||v==null?'--':esc(v)};
+ var card=function(x,i){
+  var rr=x.rrs||[],no=rr.map(function(r){return q(r[0])}).join('<br>')||'--',dt=rr.map(function(r){return q(r[1])}).join('<br>')||'--';
+  return '<div class=mcard><div class=mh><span class=mn>'+(i+1)+'</span><div class=mr><span>'+q(x.from)+'</span><i>&#10140;</i><span>'+q(x.to)+'</span></div><span class=mw>'+q(x.w)+'<small>WGN.</small></span></div>'
+   +'<div class=mg><div><b>RR NO.</b><span>'+no+'</span></div><div><b>RR DATE</b><span>'+dt+'</span></div><div><b>INV NO.</b><span>'+q(x.inv)+'</span></div></div>'
+   +'<div class="ml cm"><b>COMMODITY</b><span>'+q(x.cmdt)+'</span></div>'
+   +'<div class=ml><b>CONSIGNER</b><span>'+q(x.cnsr)+'</span></div>'
+   +'<div class=ml><b>CONSIGNEE</b><span>'+q(x.cnsg)+'</span></div></div>';
+ };
  var load=function(){
   if(!/^https:\/\//.test(RAKE_API)){M('INWARD_NO SHEET NOT CONNECTED',true);return}
   M('LOADING...');$('mmr').disabled=true;
@@ -1634,17 +1676,13 @@ function showMemo(n){
   fetch(RAKE_API+'?action=recent&limit=30&station='+encodeURIComponent(st)+'&t='+Date.now()).then(function(r){return r.json()}).then(function(j){
    if(tok!==MMT||!$('mmt'))return;
    if(!j||!j.ok)throw new Error('SRV:'+((j&&j.error)||'failed'));
-   if(!Array.isArray(j.items))throw new Error('SRV:SCRIPT IS OUTDATED - DEPLOY THE NEW VERSION IN APPS SCRIPT');
-   var h='';
-   j.items.forEach(function(x,i){
-    h+='<tr><td>'+(i+1)+'</td><td class=t>'+esc(String(x.at||'').slice(0,10)||'--')+'</td><td>'+esc(x.id)+'</td><td>'+esc(x.from)+'</td><td>'+esc(x.to)+'</td><td>'+esc(x.inv)+'</td><td class=t>'+esc(x.invd)+'</td><td>'+esc(x.w)+'</td><td>'+esc(x.status)+'</td><td class=t><button type=button class="gbtn sbtn">GENERATE</button></td></tr>';
-   });
-   $('mmt').innerHTML=h||'<tr><td colspan=10>NO ENTRIES</td></tr>';
+   if(!Array.isArray(j.items)||(j.items.length&&j.items[0].cnsr===undefined))throw new Error('SRV:SCRIPT IS OUTDATED - DEPLOY THE NEW VERSION IN APPS SCRIPT');
+   $('mmt').innerHTML=j.items.map(card).join('')||'<div class=umsg>NO ENTRIES</div>';
    $('mmc').textContent='LATEST '+j.items.length+' OF '+j.total+' ENTRIES (LATEST DATE FIRST)';M('');
   }).catch(function(e){M(spErr(e),true)}).then(function(){var b=$('mmr');if(b)b.disabled=false});
  };
  $('mmr').onclick=load;
- $('mmt').onclick=function(e){if(e.target.closest&&e.target.closest('button'))toast()};
+ $('mmt').onclick=function(e){if(e.target.closest&&e.target.closest('.mcard'))toast()};
  load();
 }
 function showDemRate(){
