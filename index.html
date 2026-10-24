@@ -383,7 +383,11 @@ header .t{min-width:0;overflow:hidden}
 .mbtn:active{transform:scale(.96)}
 .mbtn:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
 @media (min-width:601px){.mbtn{flex:1 1 0;min-width:0}}
-.mcards{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
+.mcards{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,340px),1fr));gap:12px}
+.mrow{display:flex;gap:8px;align-items:stretch;min-width:0}.mrow .mcard{flex:1}
+.mic{display:flex;flex-direction:column;gap:4px;flex:none;justify-content:center}
+.mic button{all:unset;box-sizing:border-box;cursor:pointer;width:46px;height:36px;border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;background:#fff;color:#37474F;border:1px solid #D0D7E2;box-shadow:0 1px 3px rgba(0,0,0,.18);font-size:6.5px;font-weight:800;letter-spacing:.03em}
+.mic button svg{width:19px;height:19px}.mic button:active{transform:scale(.94)}.mic button:disabled{opacity:.5;cursor:wait}.mic button:focus-visible{outline:2px solid var(--cyan)}
 .mcard{border-radius:14px;overflow:hidden;border:1px solid var(--line);background:var(--surface);box-shadow:0 6px 18px rgba(0,40,100,.14);cursor:pointer;min-width:0}
 .mcard:active{transform:scale(.985)}
 .mh{display:flex;align-items:center;gap:10px;padding:9px 12px;background:linear-gradient(135deg,#0A1F4D,#0F3F82);color:#fff;border-bottom:3px solid #00C2E8}
@@ -402,6 +406,59 @@ header .t{min-width:0;overflow:hidden}
 .ml b{padding-top:2px}
 .ml span{font-size:12px;font-weight:700;line-height:1.35;overflow-wrap:anywhere}
 .ml.cm span{color:var(--ct)}
+/* ---- DEMURRAGE BILL (A4) ---- */
+#bill{position:fixed;inset:0;z-index:40;background:#4a5468;display:flex;flex-direction:column}
+#bill[hidden]{display:none}
+#bill .bbar{display:flex;gap:8px;padding:8px 10px;background:#0A1F4D;border-bottom:3px solid #00C2E8}
+#bill .bbar .gbtn{flex:1;min-height:40px;padding:0 10px;font-size:12px;letter-spacing:.08em;justify-content:center;border-radius:10px}
+#bill .bwrap{flex:1;overflow:auto;padding:10px;-webkit-overflow-scrolling:touch}
+#bill .bmsg{color:#fff;text-align:center;font-weight:800;letter-spacing:.1em;font-size:12px;padding:30px 10px}
+#bill .bsz{margin:0 auto;position:relative}
+.a4{width:794px;height:1122px;background:#fff;color:#111;position:absolute;left:0;top:0;transform-origin:0 0;overflow:hidden;padding:36px 38px 0;font-family:"Segoe UI",Roboto,Arial,sans-serif;box-shadow:0 6px 30px rgba(0,0,0,.45);box-sizing:border-box}
+.a4 *{box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.a4 .rl{border-top:3px solid #333;border-bottom:1px solid #333;height:5px}
+.a4 .ttl{font-family:"Noto Serif",Cambria,Georgia,"Times New Roman",serif;text-align:center;font-weight:800;font-size:21px;letter-spacing:.34em;margin:12px 0 5px}
+.a4 .sub{text-align:center;font-size:11px;letter-spacing:.2em;margin-bottom:8px;font-weight:500}
+.a4 .g2{display:grid;grid-template-columns:1fr 1fr;column-gap:36px;margin-top:10px}
+.a4 .rw{display:flex;justify-content:space-between;align-items:flex-end;gap:10px;border-bottom:1px dotted #444;padding:5px 0 3px;font-size:10.5px;min-height:23px}
+.a4 .rw b{font-family:"Noto Serif",Cambria,Georgia,serif;font-size:9.5px;letter-spacing:.02em;white-space:nowrap}
+.a4 .rw span{font-weight:700;text-align:right;overflow-wrap:anywhere}
+.a4 .band{display:grid;grid-template-columns:1fr 1fr;background:#f1f1f1;border-top:1px solid #333;border-bottom:1px solid #333;padding:8px 0;margin-top:10px;font-weight:800;font-size:11.5px;text-align:center}
+.a4 .chg{text-align:center;margin-top:9px}
+.a4 .chg h4{margin:0 0 6px;font-size:11.5px;letter-spacing:.1em;font-weight:800}
+.a4 .amt{display:inline-block;border:2px solid #222;border-radius:12px;padding:7px 26px;font-family:"Noto Serif",Cambria,Georgia,serif;font-weight:800;font-size:22px}
+.a4 .amt small{font-family:"Segoe UI",Arial,sans-serif;font-size:10px;font-weight:600;margin-left:12px}
+.a4 .wds{font-family:"Noto Serif",Cambria,Georgia,serif;font-style:italic;font-weight:700;font-size:16px;margin:7px 0 8px}
+.a4 .wt{text-align:center;font-weight:800;font-size:11.5px;letter-spacing:.06em;margin:4px 0 6px}
+.a4 .wg{display:flex;gap:0}
+.a4 .wg>div{flex:1;min-width:0}
+.a4 .wg .dv{flex:0 0 1px;border-left:1px dashed #888;margin:0 9px}
+.a4 table{border-collapse:collapse;width:100%}
+.a4 .bwt th{background:#222;color:#fff;font-size:9.5px;font-weight:800;padding:0;height:18px;border:1px solid #222}
+.a4 .bwt td{text-align:center;font-size:var(--fs,10px);height:var(--rh,18px);padding:0;border:1px solid #222;border-width:1px 1px 2px 1px}
+.a4 .bt{display:flex;gap:14px;margin-top:12px;align-items:flex-start}
+.a4 .bx{border:1.5px solid #222;border-radius:7px;overflow:hidden;background:#fff}
+.a4 .bx .bh{background:#222;color:#fff;text-align:center;font-family:"Noto Serif",Cambria,Georgia,serif;font-weight:800;font-size:9px;letter-spacing:.05em;padding:6px 4px}
+.a4 .dd{width:182px}
+.a4 .dd div.r{padding:3px 8px;border-bottom:1px solid #999;font-weight:800;font-size:10.5px}
+.a4 .dd div.r i{display:block;font-style:normal;font-family:"Noto Serif",Cambria,Georgia,serif;font-size:7.5px;letter-spacing:.04em;font-weight:700;color:#222;text-transform:uppercase}
+.a4 .dd div.r.k{background:#ececec;font-size:11px}
+.a4 .dd div.r:last-child{border-bottom:0}
+.a4 .sl{width:266px}
+.a4 .sl th{font-size:8.5px;font-weight:800;padding:4px 2px;background:#ececec;border-bottom:1.5px solid #222}
+.a4 .sl td{font-size:9.5px;text-align:center;padding:3.5px 2px;border:1px solid #bbb;border-width:0 1px 2px 1px}
+.a4 .sl tr.tt td{font-weight:800;border-top:2px solid #222;background:#f3f3f3}
+.a4 .nt{position:absolute;left:38px;right:38px;bottom:28px;border-top:1px dashed #777;padding-top:6px;font-size:10px;line-height:1.4}
+@media print{
+ @page{size:A4;margin:0}
+ html,body{height:auto!important;overflow:visible!important;background:#fff!important}
+ body>*:not(#bill){display:none!important}
+ #bill{position:static!important;display:block!important;background:#fff!important}
+ #bill .bbar,#bill .bmsg{display:none!important}
+ #bill .bwrap{overflow:visible!important;padding:0!important}
+ #bill .bsz{width:794px!important;height:1122px!important;margin:0!important;position:relative!important}
+ .a4{transform:none!important;box-shadow:none!important}
+}
 </style>
 </head>
 <body>
@@ -821,7 +878,7 @@ function tallyForm(){
  +'<div class=fld><div class=stl>RR DATE</div><div class=dwrap><input id=rrd class=gin type=text inputmode=numeric maxlength=10 placeholder="DD/MM/YYYY"><span class=dpk><svg width=22 height=22 viewBox="0 0 24 24" fill=none stroke=currentColor stroke-width=2 stroke-linecap=round stroke-linejoin=round><rect x=3 y=5 width=18 height=16 rx=2></rect><path d="M3 10h18M8 3v4m8-4v4"></path></svg><input id=rrp type=date max="'+tdToday()+'" aria-label="Pick RR date"></span></div></div>'
  +'<div class=fld><div class=stl>CHARGE WEIGHT (CWT)</div><input id=cwt class=gin type=text inputmode=decimal maxlength=10 placeholder="0.0"></div>'
  +'<div class=fld><div class=stl>FREIGHT (EXCL. G.S.T.)</div><input id=frt class=gin type=text inputmode=numeric maxlength=10 placeholder="0"></div>'
- +'<div class=fld><div class=stl>G.S.T.</div><input id=gst class=gin type=text inputmode=numeric maxlength=10 placeholder="0"></div>'
+ +'<div class=fld><div class=stl>G.S.T. (BLANK = 0)</div><input id=gst class=gin type=text inputmode=numeric maxlength=10 placeholder="0"></div>'
  +'<div class=fld><div class=stl>TOTAL (FREIGHT + G.S.T.)</div><input id=tot class=gina type=text readonly value="0"></div>'
  +'<div class=fld><div class=stl>LOCAL / FOREIGN</div><div class=rg>'+ropts('lf',['LOCAL','FOREIGN'],0)+'</div></div>'
  +'<div class=fld><div class=stl>DELIVERY NO.</div><div class=dwrap><input id=dno class=gina type=text readonly maxlength=30 autocapitalize=characters><button type=button class=ebtn id=dedit title="EDIT DELIVERY NO." aria-label="Edit delivery no."><svg width=20 height=20 viewBox="0 0 24 24" fill=none stroke=currentColor stroke-width=2 stroke-linecap=round stroke-linejoin=round><path d="M12 20h9"></path><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"></path></svg></button></div><div id=lastno class=lastno></div><div id=dnerr class="lastno err"></div></div>'
@@ -856,7 +913,7 @@ function bindTally(){
   if(!dnCustom)$('dno').value=nextNo(lf);
   $('lastno').textContent='LAST '+lf+(stn?' ('+stn+')':'')+' DELIVERY NO.: '+lastNo(lf);
   $('dnerr').textContent=dnErr($('dno').value.trim(),lf);
-  var ok=!rrParse($('rrn').value).err&&!vDate(rrd.value.trim())&&/^\d+(\.\d)?$/.test($('cwt').value.trim())&&$('frt').value!==''&&$('gst').value!=='';
+  var ok=!rrParse($('rrn').value).err&&!vDate(rrd.value.trim())&&/^\d+(\.\d)?$/.test($('cwt').value.trim())&&$('frt').value!=='';
   $('sts').value=ok?'INWARD':'';
  };
  var setAuto=function(){dnCustom=false;$('dno').readOnly=true;$('dedit').classList.remove('on')};
@@ -890,6 +947,7 @@ function bindTally(){
   var rn=$('rrn').value.trim(),dt=rrd.value.trim(),cw=$('cwt').value.trim(),fr=$('frt').value.trim(),gs=$('gst').value.trim();
   if(!rn&&!dt&&!cw&&fr===''&&gs===''){msg('ENTER AT LEAST ONE DETAIL',true);return}
   var de=dt?vDate(dt):'';if(de){msg(de,true);return}
+  if(gs==='')gs='0';
   if(rn){var pr=rrParse(rn);if(pr.err){msg(pr.err,true);return}}
   if(cw&&!/^\d+(\.\d)?$/.test(cw)){msg('CHARGE WEIGHT: MAX 1 DECIMAL',true);return}
   var lf0=lfv(),dn=$('dno').value.trim().toUpperCase(),dne=dnErr(dn,lf0);
@@ -1663,13 +1721,52 @@ function showMemo(n){
  var q=function(v){return v===''||v==null?'--':esc(v)};
  var card=function(x,i){
   var rr=x.rrs||[],no=rr.map(function(r){return q(r[0])}).join('<br>')||'--',dt=rr.map(function(r){return q(r[1])}).join('<br>')||'--';
-  return '<div class=mcard><div class=mh><span class=mn>'+(i+1)+'</span><div class=mr><span>'+q(x.from)+'</span><i>&#10140;</i><span>'+q(x.to)+'</span></div><span class=mw>'+q(x.w)+'<small>WGN.</small></span></div>'
+  return '<div class=mcard data-id="'+enq(x.id)+'"><div class=mh><span class=mn>'+(i+1)+'</span><div class=mr><span>'+q(x.from)+'</span><i>&#10140;</i><span>'+q(x.to)+'</span></div><span class=mw>'+q(x.w)+'<small>WGN.</small></span></div>'
    +'<div class=mg><div><b>RR NO.</b><span>'+no+'</span></div><div><b>RR DATE</b><span>'+dt+'</span></div><div><b>INV NO.</b><span>'+q(x.inv)+'</span></div></div>'
+   +(n===2?'<div class=mg style="grid-template-columns:1fr 2fr"><div><b>DEMM. HRS.</b><span class=dh>...</span></div><div><b>DEMM. AMOUNT</b><span class=da>...</span></div></div><div class=mg style="grid-template-columns:1fr 1fr"><div><b>PLACEMENT DATE &amp; TIME</b><span class=pd>...</span></div><div><b>RELEASE DATE &amp; TIME</b><span class=rd>...</span></div></div>':'')
    +'<div class="ml cm"><b>COMMODITY</b><span>'+q(x.cmdt)+'</span></div>'
    +'<div class=ml><b>CONSIGNER</b><span>'+q(x.cnsr)+'</span></div>'
    +'<div class=ml><b>CONSIGNEE</b><span>'+q(x.cnsg)+'</span></div></div>';
  };
+ var cardW=function(x,i){var c=card(x,i);return n===2?'<div class=mrow>'+c+'<div class=mic><button type=button data-a="prv" data-id="'+enq(x.id)+'" title="PREVIEW" aria-label="PREVIEW"><svg viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z" fill="#E3F2FD" stroke="#1565C0" stroke-width="1.8"/><circle cx="12" cy="12" r="3.2" fill="#1565C0"/></svg>PREVIEW</button><button type=button data-a="pdf" data-id="'+enq(x.id)+'" title="PDF" aria-label="PDF"><svg viewBox="0 0 24 24"><path fill="#E2574C" d="M5 2h9l5 5v15a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1z"/><path fill="#fff" fill-opacity=".45" d="M14 2l5 5h-4a1 1 0 0 1-1-1z"/><text x="11.5" y="18" font-size="6.5" font-weight="800" fill="#fff" text-anchor="middle" font-family="Arial,sans-serif">PDF</text></svg>PDF</button><button type=button data-a="xls" data-id="'+enq(x.id)+'" title="EXCEL" aria-label="EXCEL"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3" fill="#1D6F42"/><path d="M8 8l8 8M16 8l-8 8" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/></svg>EXCEL</button><button type=button data-a="prt" data-id="'+enq(x.id)+'" title="PRINT" aria-label="PRINT"><svg viewBox="0 0 24 24"><rect x="7" y="3" width="10" height="5" fill="#90A4AE"/><rect x="3" y="8" width="18" height="9" rx="2" fill="#455A64"/><rect x="7" y="14" width="10" height="7" fill="#fff" stroke="#455A64" stroke-width="1.4"/><circle cx="17.5" cy="11" r="1" fill="#fff"/></svg>PRINT</button><button type=button data-a="eml" data-id="'+enq(x.id)+'" title="E-MAIL" aria-label="E-MAIL"><svg viewBox="0 0 24 24"><rect x="2.5" y="5" width="19" height="14" rx="2" fill="#fff" stroke="#D0D5DD"/><path d="M3.5 18V7.5" stroke="#4285F4" stroke-width="2"/><path d="M20.5 18V7.5" stroke="#34A853" stroke-width="2"/><path d="M3.5 7l8.5 6.5L20.5 7" fill="none" stroke="#EA4335" stroke-width="2"/></svg>E-MAIL</button><button type=button data-a="wa" data-id="'+enq(x.id)+'" title="WHATSAPP" aria-label="WHATSAPP"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#25D366"/><path d="M7.5 17.2l.8-2.8a4.8 4.8 0 1 1 1.8 1.8z" fill="none" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/><path fill="#fff" d="M10.2 9.5c-.2.4-.2 1 .3 1.8.6 1 1.5 1.7 2.4 1.9.5.1.9-.2 1.100-.6l-1-.6-.4.4c-.6-.2-1.300-.9-1.500-1.500l.4-.4-.5-1z"/></svg>WHATSAPP</button></div>':c};
+ var fillDet=function(items){
+  var cs=$('mmt')?$('mmt').querySelectorAll('.mcard'):[],k=0;
+  var run=function(){
+   if(tok!==MMT||k>=items.length)return Promise.resolve();
+   var i=k++;
+   return billData(items[i].id).then(function(r){
+    var c=cs[i];if(!c||tok!==MMT)return;
+    var pl=wtrFirstPlacement(r.d);
+    c.querySelector('.pd').textContent=dtTxt(pl.date,pl.time);c.querySelector('.rd').textContent=dtTxt(r.d.RELEASE_DATE,r.d.RELEASE_TIME);
+    c.querySelector('.dh').textContent=r.bk?'--':String(r.d.DEMURRAGE_HRS)+':00 HRS.';
+    c.querySelector('.da').textContent=r.bk?'--':'Rs. '+fmtRs(Number(r.d.DEMURRAGE_AMOUNT)||0)+'/-';
+   }).catch(function(){var c=cs[i];if(c&&tok===MMT){c.querySelector('.dh').textContent='--';c.querySelector('.da').textContent='--';c.querySelector('.pd').textContent='--';c.querySelector('.rd').textContent='--'}}).then(run);
+  };
+  run();run();run();
+ };
+ var act=function(a,id,btn){
+  if(a==='eml'||a==='wa'){toast();return}
+  if(a==='prv'){billOpen(id);return}
+  if(a==='prt'){billOpen(id,true);return}
+  btn.disabled=true;
+  var done=function(msg,err){btn.disabled=false;M(msg,err)};
+  M('PREPARING '+(a==='pdf'?'PDF':'EXCEL')+'...');
+  billData(id).then(function(r){
+   var nm=billName(r.d);
+   if(a==='xls'){
+    return loadJs(LIB_XLSX).then(function(){var wb=billBook(r);XLSX.writeFile(wb,nm+'.xlsx');done('EXCEL DOWNLOADED')});
+   }
+   var hp=window.showSaveFilePicker?window.showSaveFilePicker({suggestedName:nm+'.pdf',types:[{description:'PDF',accept:{'application/pdf':['.pdf']}}]}):Promise.resolve(null);
+   return hp.catch(function(e){if(e&&e.name==='AbortError')throw e;return null}).then(function(h){
+    return billPdf(r).then(function(blob){
+     if(h)return h.createWritable().then(function(w){return w.write(blob).then(function(){return w.close()})}).then(function(){done('PDF SAVED')});
+     var u=URL.createObjectURL(blob),el=document.createElement('a');el.href=u;el.download=nm+'.pdf';document.body.appendChild(el);el.click();el.remove();setTimeout(function(){URL.revokeObjectURL(u)},4000);done('PDF DOWNLOADED');
+    });
+   });
+  }).catch(function(e){done(e&&e.name==='AbortError'?'CANCELLED':'COULD NOT CREATE FILE - CHECK INTERNET AND TRY AGAIN',!(e&&e.name==='AbortError'))});
+ };
  var load=function(){
+  BD={};
   if(!/^https:\/\//.test(RAKE_API)){M('INWARD_NO SHEET NOT CONNECTED',true);return}
   M('LOADING...');$('mmr').disabled=true;
   var st=isAdm()?'':String(USER&&USER.station||'');
@@ -1677,13 +1774,152 @@ function showMemo(n){
    if(tok!==MMT||!$('mmt'))return;
    if(!j||!j.ok)throw new Error('SRV:'+((j&&j.error)||'failed'));
    if(!Array.isArray(j.items)||(j.items.length&&j.items[0].cnsr===undefined))throw new Error('SRV:SCRIPT IS OUTDATED - DEPLOY THE NEW VERSION IN APPS SCRIPT');
-   $('mmt').innerHTML=j.items.map(card).join('')||'<div class=umsg>NO ENTRIES</div>';
+   $('mmt').innerHTML=j.items.map(cardW).join('')||'<div class=umsg>NO ENTRIES</div>';
+   if(n===2)fillDet(j.items);
    $('mmc').textContent='LATEST '+j.items.length+' OF '+j.total+' ENTRIES (LATEST DATE FIRST)';M('');
   }).catch(function(e){M(spErr(e),true)}).then(function(){var b=$('mmr');if(b)b.disabled=false});
  };
  $('mmr').onclick=load;
- $('mmt').onclick=function(e){if(e.target.closest&&e.target.closest('.mcard'))toast()};
+ $('mmt').onclick=function(e){var ib=e.target.closest&&e.target.closest('button[data-a]');if(ib){act(ib.getAttribute('data-a'),ib.getAttribute('data-id'),ib);return}var c=e.target.closest&&e.target.closest('.mcard');if(!c)return;if(n===2)billOpen(c.getAttribute('data-id'));else toast()};
  load();
+}
+var BL={fit:true};
+function billFit(){
+ var w=document.getElementById('bwrap'),z=document.getElementById('bsz'),a=document.getElementById('a4');if(!w||!z||!a)return;
+ var s=BL.fit?Math.min(1.25,(w.clientWidth-20)/794):1;
+ z.style.width=(794*s)+'px';z.style.height=(1122*s)+'px';a.style.transform='scale('+s+')';
+}
+function billClose(){var o=document.getElementById('bill');if(o)o.hidden=true}
+function billEl(){
+ var o=document.getElementById('bill');
+ if(!o){
+  o=document.createElement('div');o.id='bill';o.hidden=true;
+  o.innerHTML='<div class=bbar><button type=button class=gbtn id=bcl>CLOSE</button><button type=button class=gbtn id=bzm>ZOOM 100%</button><button type=button class="gbtn pri" id=bpr>PRINT</button></div><div class=bwrap id=bwrap><div class=bmsg id=bmsg></div><div class=bsz id=bsz style="display:none"><div class=a4 id=a4></div></div></div>';
+  document.body.appendChild(o);
+  document.getElementById('bcl').onclick=billClose;
+  document.getElementById('bzm').onclick=function(){BL.fit=!BL.fit;this.textContent=BL.fit?'ZOOM 100%':'FIT SCREEN';billFit()};
+  document.getElementById('bpr').onclick=function(){window.print()};
+  window.addEventListener('resize',billFit);
+  document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!o.hidden)billClose()});
+ }
+ return o;
+}
+function isFci(v){return /\bF\.?\s?C\.?\s?I\b|FOOD\s+CORP/i.test(String(v||''))}
+function hm0(s){return String(s==null||s===''?'--':s).replace(/^0(\d:)/,'$1')}
+function titleCase(s){return String(s).toLowerCase().replace(/\b[a-z]/g,function(c){return c.toUpperCase()})}
+function billHtml(d,prof,bk){
+ var q=function(v){return v===''||v==null?'--':esc(v)},
+  dt=function(a,b){return a?esc(String(a).replace(/\//g,'-')+(b?' '+b:'')):'--'},
+  pl=wtrFirstPlacement(d),sl=Array.isArray(d.DEMURRAGE_SLABS)?d.DEMURRAGE_SLABS:[],
+  rr=(d.TALLY||[]).filter(function(t){return t&&(t.RR_NUMBER||t.RR_DATE)}).map(function(t){return (t.RR_NUMBER||'--')+' '+(t.RR_DATE||'')}).join(', ')||'--',
+  nm=prof&&prof.STATION_NAME?String(prof.STATION_NAME):String(d.STATION_TO||''),
+  ty=prof&&prof.TYPE?String(prof.TYPE):'',
+  tl=String(d.TYPE_OF_LOADING||'').trim().toUpperCase(),
+  amt=Number(d.DEMURRAGE_AMOUNT)||0,
+  gstOn=!(isFci(d.CONSIGNER)||isFci(d.CONSIGNEE)),
+  dh=bk||d.DEMURRAGE_HRS==null||d.DEMURRAGE_HRS===''?'--':esc(d.DEMURRAGE_HRS)+':00',
+  r0=sl.length?sl[0].RATE:'',
+  W=plWagons(d),per=Math.ceil(W.length/2),
+  rh=per<=21?18:Math.max(12,Math.floor(18*21/per)),fs=rh<17?Math.max(7.5,rh-5):10,
+  row=function(l,v){return '<div class=rw><b>'+l+'</b><span>'+v+'</span></div>'},
+  wtab=function(a,off){
+   return '<table class=bwt><tr><th>SR. NO.</th><th>RLY</th><th>WAGON TYPE</th><th>WAGON NO.</th></tr>'+a.map(function(x,i){return '<tr><td>'+(off+i+1)+'</td><td>'+q(x.RLY)+'</td><td>'+q(x.TYPE)+'</td><td>'+q(x.NO)+'</td></tr>'}).join('')+'</table>';
+  },
+  th=0,ta=0;
+ sl.forEach(function(x){th+=Number(x.HRS)||0;ta+=Number(x.AMOUNT)||0});
+ return '<div class=rl></div><div class=ttl>DEMURRAGE STATEMENT</div><div class=sub>'+esc((nm+(ty?' '+ty:'')).toUpperCase())+' &middot; RAJKOT DIVISION (W.R.)</div><div class=rl></div>'
+  +'<div class=g2><div>'+row('RR NO. &amp; DATE',esc(rr))+row('FROM STATION',q(d.STATION_FROM))+row('COMMODITY',q(d.COMMODITY_CODE))+row('DEMM. RATE',r0===''?'--':'Rs. '+fmtRs(r0)+' / Hr (Upto 6 Hrs.)*')+'</div>'
+  +'<div>'+row('INVOICE NO.',q(d.INVOICE_NO))+row('NAME OF PARTY',q(d.CONSIGNEE))+row('TYPE OF U/L',tl?esc(tl)+' UNLOADING':'--')+row('NO. OF WAGON',q(d.NO_OF_WAGONS))+'</div></div>'
+  +'<div class=band><div>PLACEMENT DATE &amp; TIME : '+dt(pl.date,pl.time)+'</div><div>RELEASE DATE &amp; TIME : '+dt(d.RELEASE_DATE,d.RELEASE_TIME)+'</div></div>'
+  +'<div class=g2 style="margin-top:12px"><div>'+row('FREE TIME',d.FREE_HOURS==null||d.FREE_HOURS===''?'--':esc(d.FREE_HOURS)+' HRS.')+'</div><div>'+row('DEMMURAGE',(dh==='--'?'--':dh+' HRS.'))+'</div></div>'
+  +'<div class=chg><h4>DEMMURAGE CHARGE IN RS. ::</h4><div class=amt>Rs. '+(bk?'__________':fmtRs(amt))+'/-'+(gstOn?' <small>(+ 5% G.S.T.)</small>':'')+'</div></div>'
+  +'<div class=chg><div class=wds>'+(bk?'&nbsp;':esc(titleCase(rsWords(amt))))+'</div></div>'
+  +'<div class=wt>:: DETAILS OF WAGONS ARE AS UNDER ::</div>'
+  +'<div class=wg style="--rh:'+rh+'px;--fs:'+fs+'px"><div>'+wtab(W.slice(0,per),0)+'</div><div class=dv></div><div>'+wtab(W.slice(per),per)+'</div></div>'
+  +'<div class=bt><div class="bx dd"><div class=bh>DEMMURAGE DETAILS</div>'
+  +'<div class=r><i>FREE HRS.</i>'+hm0(d.FREE_HOURS==null||d.FREE_HOURS===''?'':d.FREE_HOURS+':00')+'</div>'
+  +'<div class=r><i>NIGHT INC.</i>'+q(d.NIGHT_INCENTIVE)+'</div>'
+  +'<div class=r><i>DETENTION HRS.</i>'+hm0(d.NET_DETENTION)+'</div>'
+  +'<div class=r><i>TOTAL DET.</i>'+hm0(d.TOTAL_DETENTION)+'</div>'
+  +'<div class="r k"><i>DEMM. HRS.</i>'+dh+'</div>'
+  +'<div class="r k"><i>DEMM. AMT. RS.</i>'+(bk?'--':fmtRs(amt))+'</div></div>'
+  +'<div class="bx sl"><div class=bh>SLAB WISE DEMMURAGE CALCULATION</div><table><tr><th>SLAB</th><th>RATE / WGN.</th><th>CHG. HRS.</th><th>DEMM. Rs.</th></tr>'
+  +(bk?[1,2,3,4].map(function(){return '<tr><td>&nbsp;</td><td></td><td></td><td></td></tr>'}).join(''):sl.map(function(x){return '<tr><td>'+esc(x.SLAB)+'</td><td>'+x.RATE+'</td><td>'+x.HRS+'</td><td>'+x.AMOUNT+'</td></tr>'}).join(''))
+  +'<tr class=tt><td>TOTAL</td><td>---</td><td>'+(bk?'':th)+'</td><td>'+(bk?'':ta)+'</td></tr></table></div></div>'
+  +'<div class=nt><b>Note :</b> Railway Board\'s letter No. : No.TC-I/2025/201/efile/5 (3491463) Dated : 23-02-2026. - As per Para No. 2.3 First application for waiver of Demurrage/Wharfage should be submitted by Party within 10 (ten) days from the date upto which these charges had accrued.</div>';
+}
+var BD={},LIB_H2C='https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js',LIB_PDF='https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js',LIB_XLSX='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js',LIBS={};
+function loadJs(u){
+ if(LIBS[u])return LIBS[u];
+ LIBS[u]=new Promise(function(ok,no){var e=document.createElement('script');e.src=u;e.onload=ok;e.onerror=function(){delete LIBS[u];no(new Error('lib'))};document.head.appendChild(e)});
+ return LIBS[u];
+}
+function billData(id,fresh){
+ if(!fresh&&BD[id])return Promise.resolve(BD[id]);
+ if(!/^https:\/\//.test(RAKE_API))return Promise.reject(new Error('api'));
+ return fetch(RAKE_API+'?action=get&id='+encodeURIComponent(id)+'&t='+Date.now()).then(function(r){return r.json()}).then(function(j){
+  if(!j||!j.ok||!j.data)throw new Error('x');
+  var d=j.data,bk=false;
+  if(d.DEMURRAGE_AMOUNT==null||d.DEMURRAGE_AMOUNT===''||!Array.isArray(d.DEMURRAGE_SLABS)){bk=true;d=Object.assign({},d,{DEMURRAGE_AMOUNT:'',DEMURRAGE_SLABS:[],DEMURRAGE_HRS:'',NIGHT_INCENTIVE:'',NET_DETENTION:'',TOTAL_DETENTION:''})}
+  var stn=String(d.STATION_TO||'').trim().toUpperCase(),res=function(p){return BD[id]={d:d,bk:bk,prof:p}};
+  if(!stn||!spOk())return res(null);
+  return fetch(STATION_API+'?action=get&code='+encodeURIComponent(stn)+'&t='+Date.now()).then(function(r){return r.json()}).then(function(s){return res(s&&s.ok&&s.found?s.data:null)}).catch(function(){return res(null)});
+ });
+}
+function dtTxt(dt,tm){
+ var d=String(dt==null?'':dt).trim(),m=/^(\d{4})-(\d{2})-(\d{2})/.exec(d);if(m)d=m[3]+'/'+m[2]+'/'+m[1];
+ return d?d+(tm?' '+String(tm).trim():''):'--';
+}
+function billName(d){
+ var rd=String(d.RELEASE_DATE||'').trim(),m=/^(\d{4})-(\d{2})-(\d{2})/.exec(rd);
+ if(m)rd=m[3]+'-'+m[2]+'-'+m[1];else rd=rd.replace(/\//g,'-');
+ return ('INV '+(d.INVOICE_NO||'--')+' '+(d.STATION_FROM||'--')+' TO '+(d.STATION_TO||'--')+' '+(rd||'--')+' (DEMMURAGE BILL)').replace(/[\\\/:*?"<>|]/g,'-').replace(/\s+/g,' ').trim();
+}
+function billPdf(r){
+ return Promise.all([loadJs(LIB_H2C),loadJs(LIB_PDF)]).then(function(){
+  var host=document.createElement('div');host.style.cssText='position:fixed;left:-10000px;top:0;width:794px;height:1122px;background:#fff';
+  host.innerHTML='<div class=a4></div>';document.body.appendChild(host);
+  var a=host.firstChild;a.innerHTML=billHtml(r.d,r.prof,r.bk);
+  return html2canvas(a,{scale:2,backgroundColor:'#ffffff',width:794,height:1122}).then(function(c){
+   host.remove();
+   var pdf=new window.jspdf.jsPDF({unit:'pt',format:'a4',orientation:'portrait'});
+   pdf.addImage(c.toDataURL('image/jpeg',0.95),'JPEG',0,0,595.28,841.89);
+   return pdf.output('blob');
+  },function(e){host.remove();throw e});
+ });
+}
+function billBook(r){
+ var d=r.d,prof=r.prof,pl=wtrFirstPlacement(d),sl=d.DEMURRAGE_SLABS||[],bk=r.bk,W=plWagons(d),
+  rr=(d.TALLY||[]).filter(function(t){return t&&(t.RR_NUMBER||t.RR_DATE)}).map(function(t){return (t.RR_NUMBER||'')+' '+(t.RR_DATE||'')}).join(', '),
+  gstOn=!(isFci(d.CONSIGNER)||isFci(d.CONSIGNEE)),
+  nm=prof&&prof.STATION_NAME?String(prof.STATION_NAME):String(d.STATION_TO||''),ty=prof&&prof.TYPE?String(prof.TYPE):'',
+  v=function(x){return x==null?'':x},
+  A=[['DEMURRAGE STATEMENT'],[(nm+' '+ty).trim().toUpperCase()+' - RAJKOT DIVISION (W.R.)'],[],
+  ['RR NO. & DATE',rr],['FROM STATION',v(d.STATION_FROM)],['TO STATION',v(d.STATION_TO)],['COMMODITY',v(d.COMMODITY_CODE)],['INVOICE NO.',v(d.INVOICE_NO)],['NAME OF PARTY',v(d.CONSIGNEE)],['CONSIGNER',v(d.CONSIGNER)],
+  ['TYPE OF U/L',v(d.TYPE_OF_LOADING)],['NO. OF WAGON',v(d.NO_OF_WAGONS)],['PLACEMENT DATE & TIME',((pl.date||'')+' '+(pl.time||'')).trim()],['RELEASE DATE & TIME',((d.RELEASE_DATE||'')+' '+(d.RELEASE_TIME||'')).trim()],
+  ['FREE TIME (HRS.)',v(d.FREE_HOURS)],['NIGHT INC.',v(d.NIGHT_INCENTIVE)],['DETENTION HRS.',v(d.NET_DETENTION)],['TOTAL DET.',v(d.TOTAL_DETENTION)],
+  ['DEMMURAGE HRS.',bk?'':d.DEMURRAGE_HRS+':00'],['DEMMURAGE AMOUNT (RS.)',bk?'':Number(d.DEMURRAGE_AMOUNT)||0],['G.S.T.',gstOn?'+ 5% G.S.T.':'NOT APPLICABLE (FCI)'],[],
+  ['SLAB WISE DEMMURAGE CALCULATION'],['SLAB','RATE / WGN.','CHG. HRS.','DEMM. Rs.']],th=0,ta=0;
+ sl.forEach(function(x){th+=Number(x.HRS)||0;ta+=Number(x.AMOUNT)||0;A.push([x.SLAB,x.RATE,x.HRS,x.AMOUNT])});
+ A.push(['TOTAL','',bk?'':th,bk?'':ta],[],['DETAILS OF WAGONS'],['SR. NO.','RLY','WAGON TYPE','WAGON NO.']);
+ W.forEach(function(x,i){A.push([i+1,v(x.RLY),v(x.TYPE),v(x.NO)])});
+ var ws=XLSX.utils.aoa_to_sheet(A);ws['!cols']=[{wch:30},{wch:34},{wch:16},{wch:16}];
+ var wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'DEMMURAGE BILL');return wb;
+}
+function billOpen(id,thenPrint){
+ var o=billEl(),$=function(x){return document.getElementById(x)};
+ o.hidden=false;BL.fit=true;$('bzm').textContent='ZOOM 100%';
+ $('bsz').style.display='none';$('a4').innerHTML='';
+ var M=function(t,e){var m=$('bmsg');m.textContent=t;m.style.color=e?'#ffb4b4':'#fff'};
+ if(!/^https:\/\//.test(RAKE_API)){M('INWARD_NO SHEET NOT CONNECTED',true);return}
+ M('LOADING BILL...');
+ var live=function(){return !o.hidden&&$('bmsg')};
+ billData(id,true).then(function(r){
+  if(!live())return;
+  M(r.bk?'BLANK FORMAT - DEMURRAGE NOT CALCULATED YET (SUBMIT W.T.R. FIRST)':'');
+  $('a4').innerHTML=billHtml(r.d,r.prof,r.bk);$('bsz').style.display='block';billFit();
+  if(thenPrint)setTimeout(function(){window.print()},350);
+ }).catch(function(){if(live())M('COULD NOT LOAD BILL - CHECK INTERNET AND TRY AGAIN',true)});
 }
 function showDemRate(){
  var gl=document.getElementById('glist'),$=function(x){return document.getElementById(x)};
