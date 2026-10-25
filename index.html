@@ -67,7 +67,7 @@ main{background:radial-gradient(circle at 15% 12%,rgba(0,190,230,.38),transparen
 .gbtn:active{transform:scale(.97)}
 .gbtn:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
 .gbtn svg{width:26px;height:26px;color:var(--cyan);flex:none}
-#toast{position:fixed;left:50%;bottom:96px;transform:translate(-50%,16px);opacity:0;pointer-events:none;padding:10px 20px;border-radius:999px;background:var(--surface);color:var(--text);border:1px solid var(--cyan);font-size:13px;font-weight:700;letter-spacing:.08em;transition:.25s;z-index:5}
+#toast{position:fixed;left:50%;bottom:96px;transform:translate(-50%,16px);opacity:0;pointer-events:none;padding:10px 20px;border-radius:999px;background:var(--surface);color:var(--text);border:1px solid var(--cyan);font-size:13px;font-weight:700;letter-spacing:.08em;transition:.25s;z-index:60}
 #toast.on{opacity:1;transform:translate(-50%,0)}
 main.top{align-items:start}
 .glist.wide{max-width:960px}
@@ -385,6 +385,7 @@ header .t{min-width:0;overflow:hidden}
 @media (min-width:601px){.mbtn{flex:1 1 0;min-width:0}}
 .mcards{display:flex;flex-direction:column;gap:10px}
 .mflt{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;align-items:end}.mflt:empty{display:none}.mflt label{display:flex;flex-direction:column;gap:4px;min-width:0}.mflt b{font-size:10px;letter-spacing:.08em;color:var(--muted,#5b6b85)}.mflt .gin{padding:9px 10px;font-size:13px;letter-spacing:.03em;min-height:40px}.mflt .gbtn{min-height:40px}.mflt .dwrap{gap:6px}.mflt .dpk{width:40px;border-radius:8px}.mflt .dpk svg{width:18px;height:18px}.mflt .gbtn.ic{display:grid;place-items:center;padding:0;width:44px;justify-self:start}.mflt .gbtn.ic{min-width:44px;height:40px;color:var(--ct,#0a6c8a)}.mflt .gbtn.ic svg{width:22px;height:22px;display:block;flex:none;stroke:currentColor}.mflt b svg{width:14px;height:14px;vertical-align:-3px;margin-right:3px}
+.mflt .gbtn.ic{width:40px!important;min-width:40px;height:40px;min-height:40px;padding:0!important;display:grid;place-items:center;background:transparent!important;color:var(--ct)!important;border:1.5px solid var(--ct)!important;border-radius:8px;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none;justify-self:start}.mflt .gbtn.ic svg{width:18px;height:18px;padding:0!important;background:none!important;border-radius:0!important;stroke:currentColor!important;color:var(--ct);display:block}
 .mrow{display:flex;flex-direction:column;gap:4px;align-items:stretch;min-width:0;width:100%;max-width:760px}.mrow .mcard{flex:1;min-width:0}
 .mic{display:flex;flex-direction:row;gap:4px;flex:none}
 .mic button{all:unset;box-sizing:border-box;cursor:pointer;flex:1;min-width:0;height:34px;border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;background:#fff;color:#37474F;border:1px solid #D0D7E2;box-shadow:0 1px 3px rgba(0,0,0,.18);font-size:6.5px;font-weight:800;letter-spacing:.03em}
@@ -411,8 +412,9 @@ header .t{min-width:0;overflow:hidden}
 /* ---- DEMURRAGE BILL (A4) ---- */
 #bill{position:fixed;inset:0;z-index:40;background:#4a5468;display:flex;flex-direction:column}
 #bill[hidden]{display:none}
-#bill .bbar{display:flex;gap:8px;padding:8px 10px;background:#0A1F4D;border-bottom:3px solid #00C2E8}
-#bill .bbar .gbtn{flex:1;min-height:40px;padding:0 10px;font-size:12px;letter-spacing:.08em;justify-content:center;border-radius:10px}
+#bill .bbar{display:flex;flex-wrap:nowrap;justify-content:space-around;align-items:flex-start;gap:2px;padding:6px 4px;background:#fff;border-bottom:3px solid #00C2E8}
+#bill .bti{all:unset;box-sizing:border-box;cursor:pointer;flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;gap:3px;padding:2px 0;color:#37474F;font-size:8px;font-weight:800;letter-spacing:.03em;line-height:1.1;text-align:center;white-space:nowrap}
+#bill .bti svg{width:30px;height:30px;flex:none}#bill .bti:active{transform:scale(.92)}#bill .bti:disabled{opacity:.45;cursor:wait}#bill .bti:focus-visible{outline:2px solid #00C2E8;border-radius:6px}
 #bill .bwrap{flex:1;overflow:auto;padding:10px;-webkit-overflow-scrolling:touch}
 #bill .bmsg{color:#fff;text-align:center;font-weight:800;letter-spacing:.1em;font-size:12px;padding:30px 10px}
 #bill .bsz{margin:0 auto;position:relative}
@@ -1790,7 +1792,7 @@ function showMemo(n){
    +(n===2?'<div class="mg m4"><div><b>DEMM. HRS.</b><span class=dh>...</span></div><div><b>DEMM. AMOUNT</b><span class=da>...</span></div><div><b>PLACEMENT</b><span class=pd>...</span></div><div><b>RELEASE</b><span class=rd>...</span></div></div>':(n===1?'<div class=mg style="grid-template-columns:1fr"><div><b>PLACEMENT</b><span class=pd>...</span></div><span class=rd style="display:none"></span></div>':n===0?'<div class=mg style="display:none"><span class=pd></span><span class=rd></span></div>':'<div class=mg style="grid-template-columns:1fr 1fr"><div><b>PLACEMENT</b><span class=pd>...</span></div><div><b>RELEASE</b><span class=rd>...</span></div></div>'))
    +'<div class=mg><div><b>COMMODITY</b><span style="color:var(--ct)">'+q(x.cmdt)+'</span></div><div><b>CONSIGNER</b><span>'+q(x.cnsr)+'</span></div><div><b>CONSIGNEE</b><span>'+q(x.cnsg)+'</span></div></div></div>';
  };
- var cardW=function(x,i){var c=card(x,i);return true?'<div class=mrow>'+c+'<div class=mic><button type=button data-a="prv" data-id="'+enq(x.id)+'" title="PREVIEW" aria-label="PREVIEW"><svg viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z" fill="#E3F2FD" stroke="#1565C0" stroke-width="1.8"/><circle cx="12" cy="12" r="3.2" fill="#1565C0"/></svg>PREVIEW</button><button type=button data-a="pdf" data-id="'+enq(x.id)+'" title="PDF" aria-label="PDF"><svg viewBox="0 0 24 24"><path fill="#E2574C" d="M5 2h9l5 5v15a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1z"/><path fill="#fff" fill-opacity=".45" d="M14 2l5 5h-4a1 1 0 0 1-1-1z"/><text x="11.5" y="18" font-size="6.5" font-weight="800" fill="#fff" text-anchor="middle" font-family="Arial,sans-serif">PDF</text></svg>PDF</button><button type=button data-a="xls" data-id="'+enq(x.id)+'" title="EXCEL" aria-label="EXCEL"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3" fill="#1D6F42"/><path d="M8 8l8 8M16 8l-8 8" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/></svg>EXCEL</button><button type=button data-a="prt" data-id="'+enq(x.id)+'" title="PRINT" aria-label="PRINT"><svg viewBox="0 0 24 24"><rect x="7" y="3" width="10" height="5" fill="#90A4AE"/><rect x="3" y="8" width="18" height="9" rx="2" fill="#455A64"/><rect x="7" y="14" width="10" height="7" fill="#fff" stroke="#455A64" stroke-width="1.4"/><circle cx="17.5" cy="11" r="1" fill="#fff"/></svg>PRINT</button><button type=button data-a="eml" data-id="'+enq(x.id)+'" title="E-MAIL" aria-label="E-MAIL"><svg viewBox="0 0 24 24"><rect x="2.5" y="5" width="19" height="14" rx="2" fill="#fff" stroke="#D0D5DD"/><path d="M3.5 18V7.5" stroke="#4285F4" stroke-width="2"/><path d="M20.5 18V7.5" stroke="#34A853" stroke-width="2"/><path d="M3.5 7l8.5 6.5L20.5 7" fill="none" stroke="#EA4335" stroke-width="2"/></svg>E-MAIL</button><button type=button data-a="wa" data-id="'+enq(x.id)+'" title="WHATSAPP" aria-label="WHATSAPP"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#25D366"/><path d="M7.5 17.2l.8-2.8a4.8 4.8 0 1 1 1.8 1.8z" fill="none" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/><path fill="#fff" d="M10.2 9.5c-.2.4-.2 1 .3 1.8.6 1 1.5 1.7 2.4 1.9.5.1.9-.2 1.100-.6l-1-.6-.4.4c-.6-.2-1.300-.9-1.500-1.500l.4-.4-.5-1z"/></svg>WHATSAPP</button></div></div>':c};
+ var cardW=function(x,i){return card(x,i)};
  var rdKey=function(v){v=String(v==null?'':v).trim();var m=/^(\d{4})-(\d{2})-(\d{2})/.exec(v);if(m)return m[1]+m[2]+m[3];m=/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{4})/.exec(v);return m?m[3]+('0'+m[2]).slice(-2)+('0'+m[1]).slice(-2):''};
  var applyF=function(){
   if(!$('mmt'))return;
@@ -1798,7 +1800,7 @@ function showMemo(n){
   Array.prototype.forEach.call(cs,function(el){
    var ok=(!f||el.dataset.f===f)&&(!c||el.dataset.c===c);
    if(ok&&(d1||d2)){var k=el.dataset.rk;ok=!!k&&k!=='x'&&(!d1||k>=d1)&&(!d2||k<=d2)}
-   var row=el.parentNode;if(row&&row.classList.contains('mrow'))row.style.display=ok?'':'none';if(ok)vis++;
+   el.style.display=ok?'':'none';if(ok)vis++;
   });
   var mc=$('mmc');if(mc)mc.textContent=cs.length&&!vis?'NO MATCHING ENTRIES':'';
  };
@@ -1808,7 +1810,7 @@ function showMemo(n){
   var u=function(k){var a={};items.forEach(function(x){var v=String(x[k]||'').trim().toUpperCase();if(v)a[v]=1});return Object.keys(a).sort()};
   var o=function(l,id,arr,val){return '<label><b>'+l+'</b><select class=gin id='+id+'><option value="">ALL</option>'+arr.map(function(v){return '<option value="'+esc(v)+'"'+(v===val?' selected':'')+'>'+esc(v)+'</option>'}).join('')+'</select></label>'};
   var dp=function(id,l,v){return '<label><b>'+l+'</b><div class=dwrap><input id='+id+' class=gin type=text inputmode=numeric maxlength=10 autocomplete=off placeholder="DD/MM/YYYY" value="'+esc(v||'')+'"><span class=dpk><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"></rect><path d="M3 10h18M8 3v4m8-4v4"></path></svg><input type=date id='+id+'p tabindex=-1 aria-label="Pick date"></span></div></label>'};
-  h.innerHTML=o('FROM STATION','mfF',u('from'),old.F)+o('CONSIGNEE','mfC',u('cnsg'),old.C)+dp('mfD1','RELEASE DATE FROM',old.D1)+dp('mfD2','RELEASE DATE TO',old.D2)+'<button type=button class="gbtn ic" id=mfX title="CLEAR" aria-label="CLEAR FILTERS"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16l-6 8v6l-4-2v-4z"></path><path d="M16 16l5 5m0-5l-5 5"></path></svg></button>';
+  h.innerHTML=o('FROM STATION','mfF',u('from'),old.F)+o('CONSIGNEE','mfC',u('cnsg'),old.C)+dp('mfD1','RELEASE DATE FROM',old.D1)+dp('mfD2','RELEASE DATE TO',old.D2)+'<button type=button class="gbtn ic" id=mfX title="CLEAR" aria-label="CLEAR FILTERS"><svg viewBox="3 4 19 18" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16l-6 8v6l-4-2v-4z"></path><path d="M16 16l5 5m0-5l-5 5"></path></svg></button>';
   h.oninput=function(e){var t=e.target;if(t&&(t.id==='mfD1'||t.id==='mfD2')&&t.type==='text'){var x=t.value.replace(/[^0-9]/g,'').slice(0,8);t.value=x.slice(0,2)+(x.length>2?'/'+x.slice(2,4):'')+(x.length>4?'/'+x.slice(4):'')}applyF()};
   h.onchange=function(e){var t=e.target;if(t&&t.type==='date'){var m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(t.value),i=$(t.id.slice(0,-1));if(i){i.value=m?m[3]+'/'+m[2]+'/'+m[1]:''}}applyF()};
   Array.prototype.forEach.call(h.querySelectorAll('input[type=date]'),function(pk){pk.onclick=function(){try{this.showPicker()}catch(er){}}});
@@ -1881,11 +1883,13 @@ function billEl(){
  var o=document.getElementById('bill');
  if(!o){
   o=document.createElement('div');o.id='bill';o.hidden=true;
-  o.innerHTML='<div class=bbar><button type=button class=gbtn id=bcl>CLOSE</button><button type=button class=gbtn id=bzm>ZOOM 100%</button><button type=button class="gbtn pri" id=bpr>PRINT</button></div><div class=bwrap id=bwrap><div class=bmsg id=bmsg></div><div class=bsz id=bsz style="display:none"><div class=a4 id=a4></div></div></div>';
+  o.innerHTML='<div class=bbar><button type=button class=bti id=bcl title="CLOSE" aria-label="CLOSE"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#E53935"/><path d="M8 8l8 8M16 8l-8 8" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/></svg><span>CLOSE</span></button><button type=button class=bti id=bzm title="ZOOM 100%" aria-label="ZOOM 100%"><svg viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5" fill="#E3F2FD" stroke="#1565C0" stroke-width="2"/><path d="M15.5 15.5L21 21" stroke="#1565C0" stroke-width="2.6" stroke-linecap="round"/><path d="M8 10.5h5M10.5 8v5" stroke="#1565C0" stroke-width="1.6" stroke-linecap="round"/></svg><span id=bzl>ZOOM 100%</span></button><button type=button class=bti id=bpd title="PDF" aria-label="PDF"><svg viewBox="0 0 24 24"><path fill="#E2574C" d="M5 2h9l5 5v15a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1z"/><path fill="#fff" fill-opacity=".45" d="M14 2l5 5h-4a1 1 0 0 1-1-1z"/><text x="11.5" y="18" font-size="6.5" font-weight="800" fill="#fff" text-anchor="middle" font-family="Arial,sans-serif">PDF</text></svg><span>PDF</span></button><button type=button class=bti id=bpr title="PRINT" aria-label="PRINT"><svg viewBox="0 0 24 24"><rect x="7" y="3" width="10" height="5" fill="#90A4AE"/><rect x="3" y="8" width="18" height="9" rx="2" fill="#455A64"/><rect x="7" y="14" width="10" height="7" fill="#fff" stroke="#455A64" stroke-width="1.4"/><circle cx="17.5" cy="11" r="1" fill="#fff"/></svg><span>PRINT</span></button><button type=button class=bti id=bem title="E-MAIL" aria-label="E-MAIL"><svg viewBox="0 0 24 24"><rect x="2.5" y="5" width="19" height="14" rx="2" fill="#fff" stroke="#D0D5DD"/><path d="M3.5 18V7.5" stroke="#4285F4" stroke-width="2"/><path d="M20.5 18V7.5" stroke="#34A853" stroke-width="2"/><path d="M3.5 7l8.5 6.5L20.5 7" fill="none" stroke="#EA4335" stroke-width="2"/></svg><span>E-MAIL</span></button><button type=button class=bti id=bwa title="WHATSAPP" aria-label="WHATSAPP"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#25D366"/><path d="M7.5 17.2l.8-2.8a4.8 4.8 0 1 1 1.8 1.8z" fill="none" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/><path fill="#fff" d="M10.2 9.5c-.2.4-.2 1 .3 1.8.6 1 1.5 1.7 2.4 1.9.5.1.9-.2 1.1-.6l-1-.6-.4.4c-.6-.2-1.3-.9-1.5-1.5l.4-.4-.5-1z"/></svg><span>WHATSAPP</span></button></div><div class=bwrap id=bwrap><div class=bmsg id=bmsg></div><div class=bsz id=bsz style="display:none"><div class=a4 id=a4></div></div></div>';
   document.body.appendChild(o);
   document.getElementById('bcl').onclick=billClose;
-  document.getElementById('bzm').onclick=function(){BL.fit=!BL.fit;this.textContent=BL.fit?'ZOOM 100%':'FIT SCREEN';billFit()};
+  document.getElementById('bzm').onclick=function(){BL.fit=!BL.fit;document.getElementById('bzl').textContent=BL.fit?'ZOOM 100%':'FIT SCREEN';billFit()};
   document.getElementById('bpr').onclick=function(){window.print()};
+  document.getElementById('bpd').onclick=function(){billDlPdf(BL.id,BL.kd,this)};
+  document.getElementById('bem').onclick=document.getElementById('bwa').onclick=function(){toast()};
   window.addEventListener('resize',billFit);
   document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!o.hidden)billClose()});
  }
@@ -2105,11 +2109,26 @@ function rmBook(r){
  var wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'RELEASE MEMO');return wb;
 }
 function pageHtml(d,kd,ed){return kd==='rm'?rmHtml(d,ed):landHtml(d,kd)}
+function billDlPdf(id,kd,btn){
+ var m=document.getElementById('bmsg'),M=function(t,e,clr){if(m){m.textContent=t;m.style.color=e?'#ffb4b4':'#fff';if(clr)setTimeout(function(){if(m.textContent===t)m.textContent=''},2500)}};
+ if(!id){return}
+ btn.disabled=true;M('PREPARING PDF...');
+ var done=function(t,e){btn.disabled=false;M(t,e,true)};
+ billData(id).then(function(r){
+  var nm=billName(r.d,kd||''),hp=window.showSaveFilePicker?window.showSaveFilePicker({suggestedName:nm+'.pdf',types:[{description:'PDF',accept:{'application/pdf':['.pdf']}}]}):Promise.resolve(null);
+  return hp.catch(function(e){if(e&&e.name==='AbortError')throw e;return null}).then(function(h){
+   return billPdf(r,kd||'').then(function(blob){
+    if(h)return h.createWritable().then(function(w){return w.write(blob).then(function(){return w.close()})}).then(function(){done('PDF SAVED')});
+    var u=URL.createObjectURL(blob),el=document.createElement('a');el.href=u;el.download=nm+'.pdf';document.body.appendChild(el);el.click();el.remove();setTimeout(function(){URL.revokeObjectURL(u)},4000);done('PDF DOWNLOADED');
+   });
+  });
+ }).catch(function(e){done(e&&e.name==='AbortError'?'CANCELLED':'COULD NOT CREATE PDF - CHECK INTERNET AND TRY AGAIN',!(e&&e.name==='AbortError'))});
+}
 function billOpen(id,thenPrint,kd){
  var o=billEl(),$=function(x){return document.getElementById(x)};
- o.hidden=false;BL.fit=true;BL.land=!!kd&&kd!=='rm';o.classList.toggle('land',BL.land);$('a4').classList.toggle('land',BL.land);
+ o.hidden=false;BL.fit=true;BL.id=id;BL.kd=kd||'';BL.land=!!kd&&kd!=='rm';o.classList.toggle('land',BL.land);$('a4').classList.toggle('land',BL.land);
  var pg=document.getElementById('pgs');if(!pg){pg=document.createElement('style');pg.id='pgs';document.head.appendChild(pg)}pg.textContent=BL.land?'@media print{@page{size:A4 landscape;margin:0}}':'';
- $('bzm').textContent='ZOOM 100%';
+ $('bzl').textContent='ZOOM 100%';
  $('bsz').style.display='none';$('a4').innerHTML='';
  var M=function(t,e){var m=$('bmsg');m.textContent=t;m.style.color=e?'#ffb4b4':'#fff'};
  if(!/^https:\/\//.test(RAKE_API)){M('INWARD_NO SHEET NOT CONNECTED',true);return}
