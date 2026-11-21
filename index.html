@@ -666,7 +666,7 @@ function render(s){
  var ks=Object.keys(icons);
  nav.querySelectorAll('button').forEach(function(b,i){b.classList.toggle('on',ks[i]===s.t)});
  title.textContent=s.t;show(s.t);
- if(s.s==='upload')showUpload();else if(s.s==='fh')showFreeHours();else if(s.s==='sp')showStationProfile();else if(s.s==='cc')showCommodityClass();else if(s.s==='tally')showTally();else if(s.s==='plc')showPlacement();else if(s.s==='wtr')showWtr();else if(s.s==='db')showDelivery();else if(s.t==='INWARD'&&/^m[0-4]$/.test(s.s))showMemo(+s.s.slice(1));else if(s.s==='al'&&isAdm())showActLog();else if(s.s==='ud'&&isAdm())showUserList();else if(s.s==='dr'&&isAdm())showDemRate();else if(s.s==='sc'&&isAdm())showShuntRate();else if(s.s==='en'&&isAdm())showEntries();
+ if(s.s==='upload')showUpload();else if(s.s==='fh')showFreeHours();else if(s.s==='sp')showStationProfile();else if(s.s==='cc')showCommodityClass();else if(s.s==='tally')showTally();else if(s.s==='plc')showPlacement();else if(s.s==='wtr')showWtr();else if(s.s==='db')showDelivery();else if(s.t==='INWARD'&&/^m[0-4]$/.test(s.s))showMemo(+s.s.slice(1));else if(s.s==='al'&&isAdm())showActLog();else if(s.s==='ud'&&isAdm())showUserList();else if(s.s==='dr'&&isAdm())showDemRate();else if(s.s==='sc'&&isAdm())showShuntRate();else if(s.s==='en'&&isAdm())showEntries();else if(s.s==='uf'&&isAdm())showUploadFigures();
  else if(s.s==='result'){if(UW.rows.length&&UW.station)processWgn(UW.station);else showUpload()}
  NP=false;updateBack();
 }
@@ -1685,6 +1685,87 @@ function enEdit(id,status,done){
   };
  }).catch(function(){var o2=document.getElementById('tcf');if(o2&&!o2.hidden){enModal('<h3>COULD NOT LOAD</h3><p>CHECK INTERNET AND TRY AGAIN</p><div class=urow><button type=button class="gbtn pri" id=enx2>OK</button></div>');document.getElementById('enx2').onclick=enClose}});
 }
+var FIG_API='https://script.google.com/macros/s/AKfycbxRpcck6c74OxJSxTqRd2vNsZ22f7P8m04s2_7ubX-LbasO9SwZnGryiBQXxczLKrJMgQ/exec';   // PASTE: Web app URL of figures_api.gs (OW_PERIODICAL sheet)
+var UFG={data:null,name:''};
+function ufK(d){return d.slice(6)+d.slice(3,5)+d.slice(0,2)}
+function ufParse(rows){
+ var hi=-1,i,j,c;
+ for(i=0;i<rows.length;i++){if(rows[i].some(function(x){return String(x).trim().toUpperCase()==='RR NUMBER'})){hi=i;break}}
+ if(hi<0)return {err:'INVALID FILE: RR NUMBER HEADER NOT FOUND'};
+ var info=rows.slice(0,hi).map(function(r){return r.join(',')}).join(' '),
+  m=/From Date:\s*(\d{2})-(\d{2})-(\d{4}).*?To Date:\s*(\d{2})-(\d{2})-(\d{4})/i.exec(info);
+ if(!m)return {err:'INVALID FILE: FROM DATE / TO DATE NOT FOUND'};
+ var from=m[1]+'/'+m[2]+'/'+m[3],to=m[4]+'/'+m[5]+'/'+m[6];
+ if(vDate(from).indexOf('INVALID')===0||vDate(to).indexOf('INVALID')===0||ufK(from)>ufK(to))return {err:'INVALID PERIOD IN FILE'};
+ var H=rows[hi].map(function(x){return String(x).trim()}),k=-1;
+ for(c=0;c<H.length;c++){if(H[c].toUpperCase()==='RR NUMBER'){k=c;break}}
+ var out=[],skip=0;
+ for(j=hi+1;j<rows.length;j++){
+  var r=rows[j];
+  if(!String(r[k]==null?'':r[k]).trim()){skip++;continue}   // no RR number = summary row, delete
+  out.push(H.map(function(_,x){return r[x]==null?'':String(r[x]).trim()}));
+ }
+ if(!out.length)return {err:'NO RR FOUND IN FILE'};
+ return {from:from,to:to,h:H,r:out,skip:skip};
+}
+function ufPost(b){
+ b.email=USER&&USER.email;
+ return fetch(FIG_API,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(b)}).then(function(r){return r.text()}).then(function(t){var j;try{j=JSON.parse(t)}catch(e){throw new Error('SRV:SERVER REPLY INVALID - DEPLOY AS WEB APP, ACCESS: ANYONE, AND AUTHORISE')}if(!j||!j.ok)throw new Error('SRV:'+((j&&j.error)||'failed'));return j});
+}
+function showUploadFigures(){
+ var gl=document.getElementById('glist'),$=function(x){return document.getElementById(x)};
+ gl.classList.remove('wide','pl');document.querySelector('main').classList.remove('top');
+ UFG={data:null,name:''};
+ gl.innerHTML='<h3>UPLOAD FIGURES</h3><div class=gpanel><div class=stl>SELECT TYPE</div><div class=rg>'+ropts('ufty',['MONTHLY','PERIODICAL'],-1)+'</div><div id=ufbox class=wcw></div><div id=ufm class=umsg></div></div>';
+ gl.hidden=false;document.querySelector('.card').hidden=true;
+ var M=function(t,e){var m=$('ufm');if(m){m.textContent=t;m.className='umsg'+(e?' err':'')}};
+ var bind=function(){
+  var ty=document.querySelector('input[name=ufty]:checked');if(!ty)return;
+  UFG={data:null,name:''};M('');
+  var ph='CHOOSE .CSV FILE ('+ty.value+')';
+  $('ufbox').innerHTML='<label class=drop for=ufIn><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4m0 0l-4 4m4-4l4 4M4 20h16"/></svg><span id=ufn>'+ph+'</span></label><input type=file id=ufIn class=vh accept=".csv,text/csv"><div id=ufs></div><div class=urow><button type=button class=gbtn id=ufbk>BACK</button><button type=button class="gbtn pri" id=ufsb>SUBMIT</button></div>';
+  $('ufIn').onchange=function(){
+   var f=this.files[0];UFG={data:null,name:''};$('ufn').textContent=f?f.name:ph;$('ufs').innerHTML='';M('');
+   if(!f)return;
+   if(!/[.]csv$/i.test(f.name)){M('ONLY .CSV FILE IS ALLOWED',true);this.value='';$('ufn').textContent=ph;return}
+   var r=new FileReader();
+   r.onload=function(){
+    var rows=parseCSV(String(r.result));
+    if(!rows.length){M('THE FILE IS EMPTY',true);return}
+    if(ty.value==='MONTHLY'){M('MONTHLY FORMAT WILL BE ADDED LATER');return}
+    var p=ufParse(rows);
+    if(p.err){M(p.err,true);return}
+    UFG={data:p,name:f.name};
+    $('ufs').innerHTML='<table class=sum><tr><td>PERIOD FROM</td><td>'+esc(p.from)+'</td></tr><tr><td>PERIOD TO</td><td>'+esc(p.to)+'</td></tr><tr><td>RR ROWS</td><td>'+p.r.length+'</td></tr><tr><td>ROWS REMOVED (NO RR NO.)</td><td>'+p.skip+'</td></tr><tr><td>COLUMNS</td><td>'+p.h.length+'</td></tr></table>';
+   };
+   r.onerror=function(){M('COULD NOT READ THE FILE',true)};
+   r.readAsText(f);
+  };
+  $('ufbk').onclick=goBack;
+  $('ufsb').onclick=function(){
+   if(ty.value==='MONTHLY'){M('MONTHLY FORMAT WILL BE ADDED LATER');return}
+   var p=UFG.data;
+   if(!p){M('PLEASE SELECT A VALID .CSV FILE',true);return}
+   if(!/^https:\/\//.test(FIG_API)){M('FIGURES SHEET NOT CONNECTED',true);return}
+   var btn=this,send=function(ow){
+    btn.disabled=true;M('SAVING...');
+    return ufPost({action:'savePeriodical',from:p.from,to:p.to,overwrite:!!ow,data:{h:p.h,r:p.r}}).then(function(j){
+     btn.disabled=false;
+     if(j.duplicate){M('');ufDup(p,function(){send(true)});return}
+     if(!j.saved)throw new Error('SRV:SCRIPT IS OUTDATED - DEPLOY THE NEW VERSION IN APPS SCRIPT');
+     M('');sokPop(j.updated?'UPDATED SUCCESSFULLY':'SUBMITTED SUCCESSFULLY','PERIODICAL '+p.from+' TO '+p.to+' ('+p.r.length+' RR) SAVED TO GOOGLE SHEET.',function(){var c=SF[C];if(c&&c.s==='uf')showUploadFigures()});
+    }).catch(function(e){btn.disabled=false;M('NOT SAVED - '+spErr(e),true)});
+   };
+   send(false);
+  };
+ };
+ gl.onchange=function(e){if(e.target&&e.target.name==='ufty')bind()};
+}
+function ufDup(p,ow){
+ enModal('<div class=di><svg viewBox="0 0 24 24" fill=none stroke=currentColor stroke-width=2.4 stroke-linecap=round stroke-linejoin=round><path d="M12 3l10 18H2z"></path><path d="M12 10v5M12 18.2v.1"></path></svg></div><h3>ALREADY EXISTS</h3><p>DATA OF THIS PERIOD IS ALREADY SAVED</p><p style="color:var(--ct)">'+esc(p.from)+' TO '+esc(p.to)+'</p><p>OVERWRITE THE OLD DATA?</p><div class=urow><button type=button class=gbtn id=udx>CANCEL</button><button type=button class="gbtn dng" id=udok>OVERWRITE</button></div>');
+ document.getElementById('udx').onclick=enClose;
+ document.getElementById('udok').onclick=function(){enClose();ow()};
+}
 function showEntries(){
  var gl=document.getElementById('glist'),$=function(x){return document.getElementById(x)};
  gl.classList.add('wide');document.querySelector('main').classList.remove('top');
@@ -2523,9 +2604,15 @@ function show(k){
  var card=document.querySelector(".card"),gl=document.getElementById("glist");
  gl.classList.remove("wide","pl");document.querySelector("main").classList.remove("top");
  if(k==="ADMIN"){
-  var ai=[['FREE HOURS','<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>','fh'],['STATION PROFILE','<path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/>','sp'],['COMMODITY CLASS','<path d="M3 7l9-4 9 4-9 4-9-4z"/><path d="M3 12l9 4 9-4"/><path d="M3 17l9 4 9-4"/>','cc'],['ACTIVITY LOG','<path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5M9 12h6M9 16h6"/>','al'],['USER DETAILS','<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14.5c2 .7 3.5 2.6 3.5 5.5"/>','ud'],['DEMURRAGE RATE','<path d="M6 3h12M6 8h12M9 8c5 0 5 7 0 7H6l8 6"/>','dr'],['SHUNTING CHARGE','<path d="M4 8h14m0 0l-4-4m4 4l-4 4M20 16H6m0 0l4-4m-4 4l4 4"/>','sc'],['EDIT / DELETE ENTRIES','<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/>','en']];
+  var ai=[['FREE HOURS','<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>','fh'],['STATION PROFILE','<path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/>','sp'],['COMMODITY CLASS','<path d="M3 7l9-4 9 4-9 4-9-4z"/><path d="M3 12l9 4 9-4"/><path d="M3 17l9 4 9-4"/>','cc'],['ACTIVITY LOG','<path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5M9 12h6M9 16h6"/>','al'],['USER DETAILS','<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14.5c2 .7 3.5 2.6 3.5 5.5"/>','ud'],['DEMURRAGE RATE','<path d="M6 3h12M6 8h12M9 8c5 0 5 7 0 7H6l8 6"/>','dr'],['SHUNTING CHARGE','<path d="M4 8h14m0 0l-4-4m4 4l-4 4M20 16H6m0 0l4-4m-4 4l4 4"/>','sc'],['EDIT / DELETE ENTRIES','<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/>','en'],['UPLOAD FIGURES','<path d="M12 16V4m0 0l-4 4m4-4l4 4M4 20h16"/>','uf']];
   gl.innerHTML='<h3>ADMIN</h3>'+ai.map(function(i){return '<button class="gbtn" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">'+i[1]+'</svg><span>'+i[0]+'</span></button>'}).join("");
   gl.querySelectorAll(".gbtn").forEach(function(g,k){g.onclick=function(){go({t:'ADMIN',s:ai[k][2]})}});
+  gl.hidden=false;card.hidden=true;return;
+ }
+ if(k==="FIGURES"){
+  var fi=[['AP - PERIODICAL','<path d="M4 20V10m6 10V4m6 16v-7m4 7H2"/>'],['AP - MONTHLY','<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4m8-4v4"/>']];
+  gl.innerHTML='<h3>FIGURES</h3>'+fi.map(function(i){return '<button class="gbtn" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">'+i[1]+'</svg><span>'+i[0]+'</span></button>'}).join("");
+  gl.querySelectorAll(".gbtn").forEach(function(g){g.onclick=toast});
   gl.hidden=false;card.hidden=true;return;
  }
  if(k==="OUTWARD"){
@@ -2762,7 +2849,7 @@ function cpOpen(){
 
 // ---- ACTIVITY LOG (client side) ----
 var _fetch=window.fetch.bind(window);
-var SUBN={fh:'FREE HOURS',sp:'STATION PROFILE',cc:'COMMODITY CLASS',al:'ACTIVITY LOG',ud:'USER DETAILS',dr:'DEMURRAGE RATE',sc:'SHUNTING CHARGE',db:'DELIVERY BOOK',m0:'WAGON NO. PRINT',m1:'PLACEMENT MEMO',m2:'DEMMURAGE BILL',m3:'RELEASE MEMO',m4:'SHUNTING CHARGE MEMO',en:'EDIT / DELETE ENTRIES',upload:'UPLOAD WGN NO.',tally:'INWARD TALLY',plc:'PLACEMENT PARTICULARS',wtr:'W.T.R.',result:'WGN RESULT'};
+var SUBN={fh:'FREE HOURS',sp:'STATION PROFILE',cc:'COMMODITY CLASS',al:'ACTIVITY LOG',ud:'USER DETAILS',dr:'DEMURRAGE RATE',sc:'SHUNTING CHARGE',db:'DELIVERY BOOK',m0:'WAGON NO. PRINT',m1:'PLACEMENT MEMO',m2:'DEMMURAGE BILL',m3:'RELEASE MEMO',m4:'SHUNTING CHARGE MEMO',en:'EDIT / DELETE ENTRIES',uf:'UPLOAD FIGURES',upload:'UPLOAD WGN NO.',tally:'INWARD TALLY',plc:'PLACEMENT PARTICULARS',wtr:'W.T.R.',result:'WGN RESULT'};
 function logAct(ev,detail){
  if(!AU.sess)return;
  try{_fetch(AUTH_API,{method:'POST',keepalive:true,headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:'logActivity',sess:AU.sess,ip:AU.ip,event:ev,detail:String(detail||'').slice(0,300)})}).catch(function(){})}catch(e){}
