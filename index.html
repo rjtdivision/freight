@@ -546,6 +546,16 @@ header .t{min-width:0;overflow:hidden}
  .a4{transform:none!important;box-shadow:none!important}
  .a4 .rm .re{display:none!important}.a4 .rm .rem.on .pr span{background:none!important;padding:0!important}
 }
+.apt{width:100%;border-collapse:collapse;background:#fff;color:#000;font-weight:700;font-size:12px;text-align:center}
+.apt td,.apt th{border:1.5px solid #000;padding:6px 4px}
+.apt .t1{background:#fff;font-size:20px;font-weight:800;padding:10px}
+.apt .t2{font-size:20px;font-weight:800}
+.apt .t3{font-size:15px;font-weight:800}
+.apt th{font-size:12px}
+.apt input{width:100%;min-width:54px;padding:5px;font-size:13px;text-align:center;letter-spacing:0;color:#000;background:#fff;border:1px solid #555;border-radius:4px;font-family:inherit;font-weight:700}
+.apt .tr td{font-weight:800}
+.apw{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.apt .bl{background:#fff}.apt,.apt td,.apt th,.apt tr{background-color:#fff}.apw{background:#fff}.apt td.it{text-align:left;white-space:nowrap}.apt.asx{min-width:900px}
 </style>
 </head>
 <body>
@@ -666,7 +676,7 @@ function render(s){
  var ks=Object.keys(icons);
  nav.querySelectorAll('button').forEach(function(b,i){b.classList.toggle('on',ks[i]===s.t)});
  title.textContent=s.t;show(s.t);
- if(s.s==='upload')showUpload();else if(s.s==='fh')showFreeHours();else if(s.s==='sp')showStationProfile();else if(s.s==='cc')showCommodityClass();else if(s.s==='tally')showTally();else if(s.s==='plc')showPlacement();else if(s.s==='wtr')showWtr();else if(s.s==='db')showDelivery();else if(s.t==='INWARD'&&/^m[0-4]$/.test(s.s))showMemo(+s.s.slice(1));else if(s.s==='al'&&isAdm())showActLog();else if(s.s==='ud'&&isAdm())showUserList();else if(s.s==='dr'&&isAdm())showDemRate();else if(s.s==='sc'&&isAdm())showShuntRate();else if(s.s==='en'&&isAdm())showEntries();else if(s.s==='uf'&&isAdm())showUploadFigures();
+ if(s.s==='upload')showUpload();else if(s.s==='fh')showFreeHours();else if(s.s==='sp')showStationProfile();else if(s.s==='cc')showCommodityClass();else if(s.s==='tally')showTally();else if(s.s==='plc')showPlacement();else if(s.s==='wtr')showWtr();else if(s.s==='db')showDelivery();else if(s.t==='INWARD'&&/^m[0-4]$/.test(s.s))showMemo(+s.s.slice(1));else if(s.s==='al'&&isAdm())showActLog();else if(s.s==='ud'&&isAdm())showUserList();else if(s.s==='dr'&&isAdm())showDemRate();else if(s.s==='sc'&&isAdm())showShuntRate();else if(s.s==='en'&&isAdm())showEntries();else if(s.s==='uf'&&isAdm())showUploadFigures();else if(s.t==='FIGURES'&&s.s==='ap')showApPeriodical();else if(s.t==='FIGURES'&&s.s==='as')showAdvStmt();
  else if(s.s==='result'){if(UW.rows.length&&UW.station)processWgn(UW.station);else showUpload()}
  NP=false;updateBack();
 }
@@ -1686,6 +1696,255 @@ function enEdit(id,status,done){
  }).catch(function(){var o2=document.getElementById('tcf');if(o2&&!o2.hidden){enModal('<h3>COULD NOT LOAD</h3><p>CHECK INTERNET AND TRY AGAIN</p><div class=urow><button type=button class="gbtn pri" id=enx2>OK</button></div>');document.getElementById('enx2').onclick=enClose}});
 }
 var FIG_API='https://script.google.com/macros/s/AKfycbxRpcck6c74OxJSxTqRd2vNsZ22f7P8m04s2_7ubX-LbasO9SwZnGryiBQXxczLKrJMgQ/exec';   // PASTE: Web app URL of figures_api.gs (OW_PERIODICAL sheet)
+
+var APN=0;
+var APROWS=[['IND. SALT','OPEN WAGON'],['FOOD GRAIN','COVERED WAGON'],['RMC','OPEN WAGON'],['RMC','COVERED WAGON'],['EMPTY HAULAGE (OTHER THAN CONTAINER)','TANK WAGON'],['EMPTY CONTAINER','FLAT WAGON']];
+function apCat(t){var p=String(t||'').toUpperCase().trim().slice(0,2);return p==='BO'?'OPEN WAGON':p==='BC'?'COVERED WAGON':p==='BT'?'TANK WAGON':'FLAT WAGON'}
+function apKey(c,cat,cn){
+ if(/\bRAIL\b/i.test(String(cn||'')))return 'RMC';
+ var s=String(c||'').trim().replace(/^[\s\d]+[-\u2013\s]*/,'').trim().toUpperCase();
+ return s||'OTHERS';
+}
+function apNorm(s){return String(s||'').toUpperCase().replace(/[^A-Z0-9]/g,'')}
+function apCol(H,fn){for(var i=0;i<H.length;i++){if(fn(apNorm(H[i])))return i}return -1}
+function apCode(v){return String(v||'').trim().toUpperCase().split(/[\s\-(]+/)[0]}
+function apNum(v){var n=parseFloat(String(v==null?'':v).replace(/,/g,''));return isNaN(n)?0:n}
+function showApPeriodical(){
+ var gl=document.getElementById('glist'),$=function(x){return document.getElementById(x)},tok=++APN;
+ gl.classList.add('wide');gl.classList.remove('pl');document.querySelector('main').classList.add('top');
+ gl.innerHTML='<h3>AP - PERIODICAL</h3><div class=gpanel>'+apHead('sn')+'<div id=apStW></div><div id=apm class=umsg></div><div id=apT class=apw></div></div>';
+ gl.hidden=false;document.querySelector('.card').hidden=true;
+ var M=function(t,e){var m=$('apm');if(m){m.textContent=t;m.className='umsg'+(e?' err':'')}};
+ if(!/^https:\/\//.test(FIG_API)){M('FIGURES SHEET NOT CONNECTED',true);return}
+ var DATA=null,per=null,cI={};
+ var ok=function(){return tok===APN&&$('apFr')};
+ var draw=function(stn){
+  var H=DATA.h,R=DATA.r,A={},order=[],i,k,r,cat;
+  APROWS.forEach(function(x){var kk=x[0]+'|'+x[1];A[kk]={c:x[0],y:x[1],w:0,t:0,r:0};order.push(kk)});
+  for(i=0;i<R.length;i++){
+   r=R[i];if(apCode(r[cI.F])!==stn)continue;
+   cat=apCat(r[cI.T]);k=apKey(cI.C>=0?r[cI.C]:'',cat,cI.N>=0?r[cI.N]:'')+'|'+cat;
+   if(!A[k]){var q=k.split('|');A[k]={c:q[0],y:q[1],w:0,t:0,r:0};order.push(k)}
+   A[k].w+=apNum(r[cI.W]);A[k].t+=apNum(r[cI.G]);A[k].r++;
+  }
+  var h='<table class=apt><tr><td class=t1 colspan=8>THE STATEMENT OF SN - 105</td></tr><tr><td class=t2 colspan=8>'+esc(per.from)+' TO '+esc(per.to)+'</td></tr><tr><td class=t3 colspan=8 id=apNm>'+esc(stn)+' - ('+esc(stn)+')</td></tr>'
+   +'<tr><th>COMMODITY</th><th>TYPE OF WAGON</th><th>NO. OF WAGON</th><th>WT. IN TONNE</th><th>NO. OF RRs</th><th>NO. OF RAKES</th><th>AVERAGE WEIGHT</th><th>REMARKS</th></tr>';
+  order=order.filter(function(kk){return A[kk].r>0});
+  order.forEach(function(kk,n){var a=A[kk];
+   h+='<tr data-n='+n+'><td>'+esc(a.c)+'</td><td>'+esc(a.y)+'</td><td class=cw>'+a.w+'</td><td class=ct>'+(Math.round(a.t*1000)/1000)+'</td><td class=cr>'+a.r+'</td><td><input class=ark type=text inputmode=numeric maxlength=4 autocomplete=off></td><td class=aav>'+(a.r?(a.t/a.r).toFixed(2):'0.00')+'</td><td><input class=arm type=text maxlength=60 autocomplete=off></td></tr>';
+  });
+  h+='<tr class=tr><td colspan=2>TOTAL</td><td id=aw></td><td id=at></td><td id=ar></td><td id=ak></td><td id=aa></td><td></td></tr></table>';
+  if(!order.length)h=h.replace('<tr class=tr>','<tr><td colspan=8>NO FIGURES FOR THIS STATION IN THIS PERIOD</td></tr><tr class=tr>');
+  $('apT').innerHTML=h;
+  var tot=function(){
+   var w=0,t=0,r=0,k2=0;
+   $('apT').querySelectorAll('tr[data-n]').forEach(function(tr){
+    w+=+tr.querySelector('.cw').textContent;t+=+tr.querySelector('.ct').textContent;r+=+tr.querySelector('.cr').textContent;k2+=+tr.querySelector('.ark').value||0;
+   });
+   $('aw').textContent=w;$('at').textContent=Math.round(t*1000)/1000;$('ar').textContent=r;$('ak').textContent=k2;$('aa').textContent=r?(t/r).toFixed(2):'0.00';
+   var mp={};$('apT').querySelectorAll('tr[data-n]').forEach(function(tr){var cn=A[order[+tr.getAttribute('data-n')]].c;mp[cn]=(mp[cn]||0)+(+tr.querySelector('.ark').value||0)});APRK[per.from+'|'+per.to+'|'+stn]=mp;
+  };
+  $('apT').querySelectorAll('.ark').forEach(function(e){e.oninput=function(){this.value=this.value.replace(/\D/g,'');tot()}});
+  $('apT').querySelectorAll('.arm').forEach(function(e){e.oninput=function(){this.value=this.value.toUpperCase()}});
+  tot();
+  if(spOk())fetch(STATION_API+'?action=get&code='+encodeURIComponent(stn)+'&t='+Date.now()).then(function(r){return r.json()}).then(function(j){
+   if(!ok()||!$('apNm'))return;
+   if(j&&j.ok&&j.found&&j.data&&j.data.STATION_NAME)$('apNm').textContent=String(j.data.STATION_NAME).toUpperCase()+(j.data.TYPE?' '+String(j.data.TYPE).toUpperCase():'')+' - ('+stn+')';
+  }).catch(function(){});
+ };
+ var withData=function(){
+  M('');$('apT').innerHTML='';$('apStW').innerHTML='';
+  var H=DATA.h;
+  cI={F:apCol(H,function(n){return n==='STTNFROM'||n==='STATIONFROM'||n==='STNFROM'||n==='FROMSTATION'}),
+   T:apCol(H,function(n){return n==='WAGONTYPE'}),
+   W:apCol(H,function(n){return n.indexOf('8WHL')===0||n==='NOOFWAGONS'}),
+   G:apCol(H,function(n){return n.indexOf('WT')===0&&n.indexOf('CHRG')>0||n.indexOf('WEIGHT')===0&&(n.indexOf('CHRG')>0||n.indexOf('CHARG')>0)}),
+   C:apCol(H,function(n){return n==='CMDTCODECODE'||n==='CMDTCODE'||n==='CMDT'||n==='COMMODITY'}),
+   N:apCol(H,function(n){return n==='CNSRCODE'})};
+  var miss=[];
+  if(cI.F<0)miss.push('STATION FROM');if(cI.T<0)miss.push('WAGON TYPE');if(cI.W<0)miss.push('8-WHLR');if(cI.G<0)miss.push('WEIGHT CHRG');if(cI.C<0)miss.push('CMDT CODE-CODE');
+  if(miss.length){M('COLUMN NOT FOUND IN DATA: '+miss.join(', ')+' | FILE COLUMNS: '+H.join(', ').slice(0,300),true);return}
+  var go2=function(stn){draw(stn)};
+  if(isAdm()){
+   var S={},i;for(i=0;i<DATA.r.length;i++){var c=apCode(DATA.r[i][cI.F]);if(c)S[c]=1}
+   var ks=Object.keys(S).sort();
+   $('apStW').innerHTML='<div class=fld><div class=stl>STATION</div><select id=apSt class=gin>'+ks.map(function(v){return '<option>'+esc(v)+'</option>'}).join('')+'</select></div>';
+   $('apSt').onchange=function(){go2(this.value)};
+   if(ks.length)go2(ks[0]);else M('NO DATA IN THIS PERIOD',true);
+  }else{
+   var u=apCode(USER&&USER.station);
+   if(!u){M('YOUR LOGIN HAS NO STATION',true);return}
+   go2(u);
+  }
+ };
+ var loadP=function(){
+  if(!APPER)return;per={from:APPER.from,to:APPER.to};
+  M('LOADING...');$('apT').innerHTML='';$('apStW').innerHTML='';
+  fetch(FIG_API+'?action=get&from='+encodeURIComponent(per.from)+'&to='+encodeURIComponent(per.to)+'&t='+Date.now()).then(function(r){return r.json()}).then(function(j){
+   if(!ok())return;
+   if(!j||!j.ok)throw new Error('SRV:'+((j&&j.error)||'failed'));
+   if(j.found===undefined)throw new Error('SRV:SCRIPT IS OUTDATED - DEPLOY THE NEW VERSION IN APPS SCRIPT');
+   if(!j.found||!j.data||!j.data.h){M('PERIOD DATA NOT FOUND',true);return}
+   DATA=j.data;withData();
+  }).catch(function(e){if(ok())M(spErr(e),true)});
+ };
+ apWire(loadP);
+}
+var APPER=null;
+function apPeriod(v){var m=/^(\d{2})\/(\d{2})\/(\d{4})$/.exec(v);if(!m)return null;var dy=+m[1],mo=+m[2],y=+m[3],t=new Date(y,mo-1,dy);
+ if(y<2000||t.getFullYear()!==y||t.getMonth()!==mo-1||t.getDate()!==dy)return null;
+ var p=function(n){return (n<10?'0':'')+n},ms='/'+p(mo)+'/'+y,f=dy<=10?1:dy<=20?11:21,e=dy<=10?10:dy<=20?20:new Date(y,mo,0).getDate();
+ return {from:p(f)+ms,to:p(e)+ms}}
+function apHead(m){
+ var tb=function(k,l){return '<button type=button class="gbtn'+(m===k?' pri':'')+'" data-tab='+k+' style="flex:1 1 45%">'+l+'</button>'};
+ return '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:end"><div class=fld><div class=stl>FROM DATE</div><div class=dwrap><input id=apFr class=gin type=text inputmode=numeric maxlength=10 autocomplete=off placeholder="DD/MM/YYYY"><span class=dpk><svg width=22 height=22 viewBox="0 0 24 24" fill=none stroke=currentColor stroke-width=2 stroke-linecap=round stroke-linejoin=round><rect x=3 y=5 width=18 height=16 rx=2></rect><path d="M3 10h18M8 3v4m8-4v4"></path></svg><input id=apPk type=date aria-label="Pick date"></span></div></div>'
+ +'<div class=fld><div class=stl>TO DATE</div><input id=apTo class=gin type=text readonly placeholder="DD/MM/YYYY"></div></div>'
+ +'<div class=urow><button type=button class="gbtn pri" id=apGo>SUBMIT</button></div>'
+ +'<div style="display:flex;flex-wrap:wrap;gap:8px;margin:10px 0">'+tb('sn','SN-105')+tb('as','ADVANCE STATEMENT')+tb('cw','CATEGORY WISE')+tb('vs','VOUCHER SUMMARY')+'</div>';
+}
+function showApStub(m){
+ var gl=document.getElementById('glist');
+ gl.classList.add('wide');gl.classList.remove('pl');document.querySelector('main').classList.add('top');
+ gl.innerHTML='<h3>AP - PERIODICAL</h3><div class=gpanel>'+apHead(m)+'<div id=apm class=umsg>'+(m==='cw'?'CATEGORY WISE':'VOUCHER SUMMARY')+' FORMAT IS NOT READY YET</div></div>';
+ gl.hidden=false;document.querySelector('.card').hidden=true;
+ apWire(function(){});
+}
+function apWire(loadP){
+ var $=function(x){return document.getElementById(x)},fr=$('apFr'),pk=$('apPk'),to=$('apTo');
+ var calc=function(){var p=apPeriod(fr.value);to.value=p?p.to:'';return p};
+ fr.oninput=function(){var v=this.value.replace(/[^0-9]/g,'').slice(0,8);this.value=v.slice(0,2)+(v.length>2?'/'+v.slice(2,4):'')+(v.length>4?'/'+v.slice(4):'');calc()};
+ fr.onblur=function(){var p=calc();if(p)fr.value=p.from};
+ pk.onclick=function(){try{this.showPicker()}catch(e){}};
+ pk.onchange=function(){var m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(this.value);if(m){fr.value=m[3]+'/'+m[2]+'/'+m[1];var p=calc();if(p)fr.value=p.from}};
+ $('apGo').onclick=function(){
+  var p=calc();
+  if(!p){var m=$('apm')||$('asm');if(m){m.textContent='ENTER A VALID FROM DATE AS DD/MM/YYYY';m.className='umsg err'}return}
+  fr.value=p.from;to.value=p.to;APPER=p;loadP();
+ };
+ Array.prototype.forEach.call(document.querySelectorAll('[data-tab]'),function(b){b.onclick=function(){
+  var p=calc();if(p)APPER=p;
+  var t=this.getAttribute('data-tab');if(t==='as')showAdvStmt();else if(t==='cw'||t==='vs')showApStub(t);else showApPeriodical();
+ }});
+ if(APPER){fr.value=APPER.from;to.value=APPER.to;loadP()}
+}
+var APRK={},ASN=0;
+var ASCH=['DEBIT OUTSTANDING (ADMITTED)','DEBIT OUTSTANDING (DISPUTTED)','FREIGHT OUTSTANDING / MPA','WHARFAGE CHARGES','DEMMURAGE CHARGES','SHUNTING CHARGES','STABLING CHARGES','PUNNATIVE CHARGES','DETENTION CHARGES','OTHER CHARGS','UNDER CHARGES'];
+function asLY(d){var dy=d.slice(0,2),m=d.slice(3,5);if(m==='02'&&dy==='29')dy='28';return dy+'/'+m+'/'+(+d.slice(6)-1)}
+function asR(n){return Math.round(n*1000)/1000}
+function asV(e){return e?apNum('value' in e?e.value:e.textContent):0}
+function asI(c,v){return '<input class="'+c+'" type=text inputmode=decimal maxlength=12 autocomplete=off value="'+(v?esc(String(asR(v))):'')+'">'}
+function asCols(H){return {F:apCol(H,function(n){return n==='STTNFROM'||n==='STATIONFROM'||n==='STNFROM'||n==='FROMSTATION'}),
+ W:apCol(H,function(n){return n.indexOf('8WHL')===0||n==='NOOFWAGONS'}),
+ G:apCol(H,function(n){return n.indexOf('WT')===0&&n.indexOf('CHRG')>0||n.indexOf('WEIGHT')===0&&(n.indexOf('CHRG')>0||n.indexOf('CHARG')>0)}),
+ C:apCol(H,function(n){return n==='CMDTCODECODE'||n==='CMDTCODE'||n==='CMDT'||n==='COMMODITY'}),
+ N:apCol(H,function(n){return n==='CNSRCODE'}),
+ E:apCol(H,function(n){return n==='TOTALFRGT'||n==='TOTLFRGT'||n==='TOTALFREIGHT'}),
+ X:apCol(H,function(n){return n.indexOf('TOTLGST')>=0||n.indexOf('TOTALGST')>=0})}}
+function asAgg(D,c,stn){var m={},i,r,k,a;for(i=0;i<D.r.length;i++){r=D.r[i];if(apCode(r[c.F])!==stn)continue;
+ k=apKey(r[c.C],0,c.N>=0?r[c.N]:'');a=m[k]||(m[k]={c:k,w:0,t:0,e:0,g:0});
+ a.w+=apNum(r[c.W]);a.t+=apNum(r[c.G]);a.e+=apNum(r[c.E]);a.g+=apNum(r[c.X])}return m}
+function showAdvStmt(){
+ var gl=document.getElementById('glist'),$=function(x){return document.getElementById(x)},tok=++ASN,sq=0;
+ gl.classList.add('wide');gl.classList.remove('pl');document.querySelector('main').classList.add('top');
+ gl.innerHTML='<h3>AP - PERIODICAL</h3><div class=gpanel>'+apHead('as')+'<div id=asStW></div><div id=asm class=umsg></div><div id=asT class=apw></div><div id=asB></div></div>';
+ gl.hidden=false;document.querySelector('.card').hidden=true;
+ var M=function(t,e){var m=$('asm');if(m){m.textContent=t;m.className='umsg'+(e?' err':'')}};
+ if(!/^https:\/\//.test(FIG_API)){M('FIGURES SHEET NOT CONNECTED',true);return}
+ var LIST=[],DATA=null,per=null,cI={},enc=encodeURIComponent;
+ var ok=function(){return tok===ASN&&$('apFr')};
+ var jget=function(u){return fetch(u+'&t='+Date.now()).then(function(r){return r.json()}).then(function(j){if(!j||!j.ok)throw new Error('SRV:'+((j&&j.error)||'failed'));return j})};
+ var lbl=function(f,t){return f===t?f:f+' TO '+t};
+ var loadLY=function(stn){
+  var lf=asLY(per.from),lt=asLY(per.to);
+  return jget(FIG_API+'?action=stmt&stn='+enc(stn)+'&from='+enc(lf)+'&to='+enc(lt)).then(function(j){
+   if(j.found&&j.data)return {src:'SAVED STATEMENT',rows:j.data.rows||[],ch:j.data.ch||{}};
+   return jget(FIG_API+'?action=get&from='+enc(lf)+'&to='+enc(lt)).then(function(j2){
+    if(!j2.found||!j2.data||!j2.data.h)return null;
+    var c=asCols(j2.data.h);if(c.F<0||c.W<0||c.G<0||c.C<0)return null;
+    var m=asAgg(j2.data,c,stn);
+    return {src:'UPLOADED PERIODICAL FIGURES (ENTER RAKES MANUALLY)',rows:Object.keys(m).map(function(k){return m[k]}),ch:{}};
+   });
+  });
+ };
+ var draw=function(stn,ly){
+  var m=asAgg(DATA,cI,stn),names=Object.keys(m),rk=APRK[per.from+'|'+per.to+'|'+stn]||{},lm={},h,n;
+  ((ly&&ly.rows)||[]).forEach(function(x){lm[x.c]=x;if(names.indexOf(x.c)<0)names.push(x.c)});
+  var lch=(ly&&ly.ch)||{};
+  h='<table class="apt asx"><tr><td class=t1 colspan=11>ADVANCE STATEMENT OF GROSS EARNINGS AND TRAFFIC HANDLED</td></tr><tr><td class=t2 colspan=11>'+esc(lbl(per.from,per.to))+'</td></tr><tr><td class=t3 colspan=11 id=asNm>'+esc(stn)+' - ('+esc(stn)+')</td></tr>'
+   +'<tr><th rowspan=2>ITEM</th><th colspan=5>'+esc(lbl(per.from,per.to))+'</th><th colspan=5>'+esc(lbl(asLY(per.from),asLY(per.to)))+'</th></tr><tr>'
+   +'<th>NO. OF RAKES</th><th>NO. OF WGN.</th><th>WEIGHT IN TONNES</th><th>EARNINGS IN RS.</th><th>G.S.T.</th><th>NO. OF RAKES</th><th>NO. OF WGN.</th><th>WEIGHT IN TONNES</th><th>EARNINGS IN RS.</th><th>G.S.T.</th></tr>';
+  names.forEach(function(c){var a=m[c]||{w:0,t:0,e:0,g:0},l=lm[c]||{};
+   h+='<tr class=cm><td class=it>'+esc(c)+'</td><td>'+asI('c0',rk[c]||0)+'</td><td class=c1>'+asR(a.w)+'</td><td class=c2>'+asR(a.t)+'</td><td class=c3>'+asR(a.e)+'</td><td class=c4>'+asR(a.g)+'</td>'
+    +'<td>'+asI('l0',l.r)+'</td><td>'+asI('l1',l.w)+'</td><td>'+asI('l2',l.t)+'</td><td>'+asI('l3',l.e)+'</td><td>'+asI('l4',l.g)+'</td></tr>';
+  });
+  if(!names.length)h+='<tr><td colspan=11>NO FIGURES FOR THIS STATION IN THIS PERIOD</td></tr>';
+  h+='<tr class=tr><td class=it>TOTAL FREIGHT - OUTWARD</td>';
+  ['c','l'].forEach(function(p){for(n=0;n<5;n++)h+='<td id=f'+p+n+'></td>'});
+  h+='</tr>';
+  ASCH.forEach(function(nm){var l=lch[nm]||[];
+   h+='<tr class=ch><td class=it>'+esc(nm)+'</td><td colspan=3 class=bl></td><td>'+asI('c3',0)+'</td><td>'+asI('c4',0)+'</td><td colspan=3 class=bl></td><td>'+asI('l3',l[0])+'</td><td>'+asI('l4',l[1])+'</td></tr>';
+  });
+  h+='<tr class=tr><td>TOTAL</td>';
+  ['c','l'].forEach(function(p){for(n=0;n<5;n++)h+='<td id=t'+p+n+'></td>'});
+  h+='</tr></table>';
+  $('asT').innerHTML=h;
+  $('asB').innerHTML='<div class=urow><button type=button class="gbtn pri" id=asSv>SAVE STATEMENT</button></div>';
+  var T=$('asT');
+  var tot=function(){
+   ['c','l'].forEach(function(p){
+    var j,s,f=[];
+    for(j=0;j<5;j++){s=0;T.querySelectorAll('tr.cm .'+p+j).forEach(function(e){s+=asV(e)});f[j]=s;$('f'+p+j).textContent=asR(s)}
+    for(j=3;j<5;j++){s=0;T.querySelectorAll('tr.ch .'+p+j).forEach(function(e){s+=asV(e)});f[j]+=s}
+    for(j=0;j<5;j++)$('t'+p+j).textContent=asR(f[j]);
+   });
+  };
+  T.querySelectorAll('input').forEach(function(e){e.oninput=function(){this.value=this.value.replace(/[^\d.]/g,'');tot()}});
+  tot();
+  $('asSv').onclick=function(){
+   var rows=[],ch={},b=this;
+   T.querySelectorAll('tr.cm').forEach(function(tr,i){rows.push({c:names[i],r:asV(tr.querySelector('.c0')),w:asV(tr.querySelector('.c1')),t:asV(tr.querySelector('.c2')),e:asV(tr.querySelector('.c3')),g:asV(tr.querySelector('.c4'))})});
+   T.querySelectorAll('tr.ch').forEach(function(tr,i){ch[ASCH[i]]=[asV(tr.querySelector('.c3')),asV(tr.querySelector('.c4'))]});
+   b.disabled=true;M('SAVING...');
+   ufPost({action:'saveStatement',stn:stn,from:per.from,to:per.to,data:{rows:rows,ch:ch}}).then(function(){
+    M('');b.disabled=false;sokPop('SAVED SUCCESSFULLY','STATEMENT '+lbl(per.from,per.to)+' ('+stn+') SAVED. IT WILL BE USED AS LAST YEAR DATA NEXT YEAR.',function(){});
+   }).catch(function(e){M('NOT SAVED - '+spErr(e),true);b.disabled=false});
+  };
+  if(spOk())fetch(STATION_API+'?action=get&code='+enc(stn)+'&t='+Date.now()).then(function(r){return r.json()}).then(function(j){
+   if(!ok()||!$('asNm'))return;
+   if(j&&j.ok&&j.found&&j.data&&j.data.STATION_NAME)$('asNm').textContent=String(j.data.STATION_NAME).toUpperCase()+(j.data.TYPE?' '+String(j.data.TYPE).toUpperCase():'')+' - ('+stn+')';
+  }).catch(function(){});
+ };
+ var go2=function(stn){
+  var q=++sq;M('LOADING...');$('asT').innerHTML='';$('asB').innerHTML='';
+  loadLY(stn).then(function(ly){if(!ok()||q!==sq)return;draw(stn,ly);
+   M(ly?'LAST YEAR DATA LOADED FROM '+ly.src:'LAST YEAR DATA NOT AVAILABLE - ENTER MANUALLY')
+  }).catch(function(e){if(!ok()||q!==sq)return;draw(stn,null);M('LAST YEAR DATA NOT LOADED - '+spErr(e),true)});
+ };
+ var loadP=function(){
+  if(!APPER)return;per={from:APPER.from,to:APPER.to};
+  M('LOADING...');$('asT').innerHTML='';$('asB').innerHTML='';$('asStW').innerHTML='';
+  jget(FIG_API+'?action=get&from='+enc(per.from)+'&to='+enc(per.to)).then(function(j){
+   if(!ok())return;
+   if(!j.found||!j.data||!j.data.h){M('PERIOD DATA NOT FOUND',true);return}
+   DATA=j.data;cI=asCols(DATA.h);
+   var miss=[];
+   if(cI.F<0)miss.push('STATION FROM');if(cI.W<0)miss.push('8-WHLR');if(cI.G<0)miss.push('WEIGHT CHRG');if(cI.C<0)miss.push('CMDT CODE-CODE');if(cI.E<0)miss.push('TOTAL FRGT');if(cI.X<0)miss.push('GST DETAILS TOTL GST');
+   if(miss.length){M('COLUMN NOT FOUND IN DATA: '+miss.join(', ')+' | FILE COLUMNS: '+DATA.h.join(', ').slice(0,300),true);return}
+   if(isAdm()){
+    var S={},i;for(i=0;i<DATA.r.length;i++){var c=apCode(DATA.r[i][cI.F]);if(c)S[c]=1}
+    var ks=Object.keys(S).sort();
+    $('asStW').innerHTML='<div class=fld><div class=stl>STATION</div><select id=asSt class=gin>'+ks.map(function(x){return '<option>'+esc(x)+'</option>'}).join('')+'</select></div>';
+    $('asSt').onchange=function(){go2(this.value)};
+    if(ks.length)go2(ks[0]);else M('NO DATA IN THIS PERIOD',true);
+   }else{
+    var u=apCode(USER&&USER.station);
+    if(!u){M('YOUR LOGIN HAS NO STATION',true);return}
+    go2(u);
+   }
+  }).catch(function(e){if(ok())M(spErr(e),true)});
+ };
+ apWire(loadP);
+}
 var UFG={data:null,name:''};
 function ufK(d){return d.slice(6)+d.slice(3,5)+d.slice(0,2)}
 function ufParse(rows){
@@ -2612,7 +2871,7 @@ function show(k){
  if(k==="FIGURES"){
   var fi=[['AP - PERIODICAL','<path d="M4 20V10m6 10V4m6 16v-7m4 7H2"/>'],['AP - MONTHLY','<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4m8-4v4"/>']];
   gl.innerHTML='<h3>FIGURES</h3>'+fi.map(function(i){return '<button class="gbtn" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">'+i[1]+'</svg><span>'+i[0]+'</span></button>'}).join("");
-  gl.querySelectorAll(".gbtn").forEach(function(g){g.onclick=toast});
+  gl.querySelectorAll(".gbtn").forEach(function(g,i){g.onclick=i===0?function(){go({t:'FIGURES',s:'ap'})}:toast});
   gl.hidden=false;card.hidden=true;return;
  }
  if(k==="OUTWARD"){
@@ -2849,7 +3108,7 @@ function cpOpen(){
 
 // ---- ACTIVITY LOG (client side) ----
 var _fetch=window.fetch.bind(window);
-var SUBN={fh:'FREE HOURS',sp:'STATION PROFILE',cc:'COMMODITY CLASS',al:'ACTIVITY LOG',ud:'USER DETAILS',dr:'DEMURRAGE RATE',sc:'SHUNTING CHARGE',db:'DELIVERY BOOK',m0:'WAGON NO. PRINT',m1:'PLACEMENT MEMO',m2:'DEMMURAGE BILL',m3:'RELEASE MEMO',m4:'SHUNTING CHARGE MEMO',en:'EDIT / DELETE ENTRIES',uf:'UPLOAD FIGURES',upload:'UPLOAD WGN NO.',tally:'INWARD TALLY',plc:'PLACEMENT PARTICULARS',wtr:'W.T.R.',result:'WGN RESULT'};
+var SUBN={ap:'AP - PERIODICAL',as:'ADVANCE STATEMENT',fh:'FREE HOURS',sp:'STATION PROFILE',cc:'COMMODITY CLASS',al:'ACTIVITY LOG',ud:'USER DETAILS',dr:'DEMURRAGE RATE',sc:'SHUNTING CHARGE',db:'DELIVERY BOOK',m0:'WAGON NO. PRINT',m1:'PLACEMENT MEMO',m2:'DEMMURAGE BILL',m3:'RELEASE MEMO',m4:'SHUNTING CHARGE MEMO',en:'EDIT / DELETE ENTRIES',uf:'UPLOAD FIGURES',upload:'UPLOAD WGN NO.',tally:'INWARD TALLY',plc:'PLACEMENT PARTICULARS',wtr:'W.T.R.',result:'WGN RESULT'};
 function logAct(ev,detail){
  if(!AU.sess)return;
  try{_fetch(AUTH_API,{method:'POST',keepalive:true,headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:'logActivity',sess:AU.sess,ip:AU.ip,event:ev,detail:String(detail||'').slice(0,300)})}).catch(function(){})}catch(e){}
